@@ -1,0 +1,17 @@
+syntax = "proto3";
+package power_msg;
+import "std.proto";
+
+enum MOTORMODE {
+    REST_MODE=0;
+    HALL_CALIBRATE=1;
+    MOTOR_MODE=2;
+    SET_ZERO=3;
+}
+
+message PowerBoardStamped {
+    std_msg.Header header = 1;
+    map<string, bool> digital = 2;
+    map<string, float> analog = 3;
+    MOTORMODE mode = 4;
+}

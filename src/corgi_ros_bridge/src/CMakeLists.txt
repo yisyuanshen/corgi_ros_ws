@@ -1,0 +1,18 @@
+include_directories(${CMAKE_CURRENT_LIST_DIR})
+# add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/cpg)
+# add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/imu)
+# add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/kinematic)
+# add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/fsm)
+# add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/estimation)
+# add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/image)
+# add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/fpga_driver)
+# add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/ros_corgi_bridge)
+
+add_executable(ros_corgi_bridge ./corgi_ros_bridge.cpp)
+target_link_libraries(ros_corgi_bridge ${catkin_LIBRARIES} ${CMAKE_DL_LIBS} ${_CORE_LIBRARIES} motor_proto power_proto force_proto -lpthread)
+add_dependencies(ros_corgi_bridge ${PROJECT_NAME}_generate_messages)
+
+add_executable(ros_corgi_bridge_webot ./corgi_ros_bridge.cpp)
+target_link_libraries(ros_corgi_bridge_webot ${catkin_LIBRARIES} ${CMAKE_DL_LIBS} ${_CORE_LIBRARIES} motor_proto power_proto force_proto -lpthread)
+add_dependencies(ros_corgi_bridge_webot ${PROJECT_NAME}_generate_messages)
+target_compile_definitions(ros_corgi_bridge_webot PRIVATE -DSIMULATION)

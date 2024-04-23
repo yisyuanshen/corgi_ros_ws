@@ -1,0 +1,8 @@
+syntax = "proto3";
+package doc_msg;
+message Image {
+    string Name = 1;
+    bytes  data = 2;
+    int32 width = 3;
+    int32 height = 4;
+}

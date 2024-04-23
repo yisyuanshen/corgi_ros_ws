@@ -1,0 +1,6 @@
+<launch>
+    <env name="CORE_LOCAL_IP" value="127.0.0.1"/>
+    <env name="CORE_MASTER_ADDR" value="127.0.0.1:10010"/>
+    <node name="run_webots" pkg="corgi_ros_bridge" type="run_webots.sh" output="screen" />
+    <node name="ros_corgi_bridge_webot" pkg="corgi_ros_bridge" type="ros_corgi_bridge_webot" output="screen"/> 
+</launch>

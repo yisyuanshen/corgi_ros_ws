@@ -1,0 +1,12 @@
+float64 M_x
+float64 M_y
+float64 K0_x
+float64 K0_y
+float64 D_x
+float64 D_y
+float64 adaptive_kp_x
+float64 adaptive_kp_y
+float64 adaptive_ki_x
+float64 adaptive_ki_y
+float64 adaptive_kd_x
+float64 adaptive_kd_y
