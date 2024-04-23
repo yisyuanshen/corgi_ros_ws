@@ -13,7 +13,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if (BUILD_WITH_ROS)
   set(CMAKE_PREFIX_PATH "/opt/ros/noetic;${LOCAL_PACKAGE_PATH}")
-  find_package(catkin REQUIRED COMPONENTS roscpp std_msgs message_generation)
+  find_package(catkin REQUIRED COMPONENTS roscpp std_msgs geometry_msgs message_generation)
     add_message_files(
     FILES
     RobotStamped.msg
@@ -23,8 +23,8 @@ if (BUILD_WITH_ROS)
     impedance.msg
     )
 
-    generate_messages(DEPENDENCIES std_msgs)
-  catkin_package(CATKIN_DEPENDS roscpp std_msgs message_runtime)
+    generate_messages(DEPENDENCIES std_msgs geometry_msgs)
+  catkin_package(CATKIN_DEPENDS roscpp std_msgs geometry_msgs message_runtime)
   include_directories(${catkin_INCLUDE_DIRS})
 else() 
   set(CMAKE_PREFIX_PATH ${CORE_PREFIX_PATH})

@@ -1,22 +1,27 @@
 #include "corgi_ros_bridge/LegStamped.h"
 #include "corgi_ros_bridge/RobotStamped.h"
+#include "geometry_msgs/Pose.h"
+#include "geometry_msgs/Twist.h"
 #include <iostream>
 #include <mutex>
 #include <ros/ros.h>
 
-#include "force.pb.h"
 #include "math.h"
+#include "force.pb.h"
 #include "motor.pb.h"
 #include "power.pb.h"
+#include "robot.pb.h"
 #include <NodeHandler.h>
 #include <sys/time.h>
 
 motor_msg::MotorStamped motor_fb_msg;
 force_msg::LegForceStamped force_fb_msg;
+robot_msg::State robot_state_fb_msg;
 corgi_ros_bridge::RobotStamped force_ros_msg;
 
 int motor_msg_updated;
 int force_msg_updated;
+int robot_state_msg_update;
 int force_ros_msg_updated;
 
 std::mutex mtx;
@@ -31,6 +36,13 @@ void force_feedback_cb(force_msg::LegForceStamped msg) {
   mtx.lock();
   force_fb_msg = msg;
   force_msg_updated = 1;
+  mtx.unlock();
+}
+
+void robot_state_feedback_cb(robot_msg::State msg) {
+  mtx.lock();
+  robot_state_fb_msg = msg;
+  robot_state_msg_update = 1;
   mtx.unlock();
 }
 
@@ -50,6 +62,8 @@ int main(int argc, char **argv) {
   ros::NodeHandle nh;
   ros::Publisher ros_legpub_ =
       nh.advertise<corgi_ros_bridge::RobotStamped>("Robot_legs", 2000);
+  ros::Publisher ros_robot_state_pub =
+      nh.advertise<corgi_ros_bridge::RobotStamped>("robot/state", 2000);
   ros::Subscriber ros_force_sub =
       nh.subscribe<corgi_ros_bridge::RobotStamped>("force/force_command", 2000,
                                                    ros_force_cb);
@@ -64,6 +78,9 @@ int main(int argc, char **argv) {
   core::Subscriber<force_msg::LegForceStamped> &force_sub =
       nh_.subscribe<force_msg::LegForceStamped>("robot/force_state", 1000,
                                                 force_feedback_cb);
+  core::Subscriber<robot_msg::State> &robot_state_sub =
+      nh_.subscribe<robot_msg::State>("robot/state", 1000,
+                                      robot_state_feedback_cb);
                                                 
   core::Publisher<force_msg::LegForceStamped> &force_pub =
       nh_.advertise<force_msg::LegForceStamped>("force/force_command");
@@ -196,6 +213,30 @@ int main(int argc, char **argv) {
       ros_legpub_.publish(robot_msg);
       force_msg_updated = 0;
       motor_msg_updated = 0;
+    }
+
+
+    if (robot_state_msg_update){
+      mtx.lock();
+      corgi_ros_bridge::RobotStamped robot_msg;
+      robot_msg.pose.position.x = robot_state_fb_msg.pose().position().x();
+      robot_msg.pose.position.y = robot_state_fb_msg.pose().position().y();
+      robot_msg.pose.position.z = robot_state_fb_msg.pose().position().z();
+      robot_msg.pose.orientation.x = robot_state_fb_msg.pose().orientation().x();
+      robot_msg.pose.orientation.y = robot_state_fb_msg.pose().orientation().y();
+      robot_msg.pose.orientation.z = robot_state_fb_msg.pose().orientation().z();
+      robot_msg.pose.orientation.w = robot_state_fb_msg.pose().orientation().w();
+      robot_msg.twist.linear.x = robot_state_fb_msg.twist().linear().x();
+      robot_msg.twist.linear.y = robot_state_fb_msg.twist().linear().y();
+      robot_msg.twist.linear.z = robot_state_fb_msg.twist().linear().z();
+      robot_msg.twist.angular.x = robot_state_fb_msg.twist().angular().x();
+      robot_msg.twist.angular.y = robot_state_fb_msg.twist().angular().y();
+      robot_msg.twist.angular.z = robot_state_fb_msg.twist().angular().z();
+
+      mtx.unlock();
+
+      ros_robot_state_pub.publish(robot_msg);
+      robot_state_msg_update = 0;
     }
 
     /*
