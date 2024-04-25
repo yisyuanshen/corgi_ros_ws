@@ -60,8 +60,8 @@ int main(int argc, char **argv) {
   ros::init(argc, argv, "ros_corgi_bridge");
 
   ros::NodeHandle nh;
-  ros::Publisher ros_legpub_ =
-      nh.advertise<corgi_ros_bridge::RobotStamped>("Robot_legs", 2000);
+  // ros::Publisher ros_legpub_ =
+  //     nh.advertise<corgi_ros_bridge::RobotStamped>("Robot_legs", 2000);
   ros::Publisher ros_robot_state_pub =
       nh.advertise<corgi_ros_bridge::RobotStamped>("robot/state", 2000);
   ros::Subscriber ros_force_sub =
@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
       nh_.subscribe<motor_msg::MotorStamped>("motor/state", 1000,
                                              motor_feedback_cb);
   core::Subscriber<force_msg::LegForceStamped> &force_sub =
-      nh_.subscribe<force_msg::LegForceStamped>("robot/force_state", 1000,
+      nh_.subscribe<force_msg::LegForceStamped>("force/force_state", 1000,
                                                 force_feedback_cb);
   core::Subscriber<robot_msg::State> &robot_state_sub =
       nh_.subscribe<robot_msg::State>("robot/state", 1000,
@@ -126,7 +126,7 @@ int main(int argc, char **argv) {
       force_ros_msg_updated = 0;
     }
 
-
+    /*
     if (motor_msg_updated && motor_fb_msg.motors().size() == 8) {
       mtx.lock();
       corgi_ros_bridge::RobotStamped robot_msg;
@@ -214,6 +214,7 @@ int main(int argc, char **argv) {
       force_msg_updated = 0;
       motor_msg_updated = 0;
     }
+    */
 
 
     if (robot_state_msg_update){
@@ -232,6 +233,17 @@ int main(int argc, char **argv) {
       robot_msg.twist.angular.x = robot_state_fb_msg.twist().angular().x();
       robot_msg.twist.angular.y = robot_state_fb_msg.twist().angular().y();
       robot_msg.twist.angular.z = robot_state_fb_msg.twist().angular().z();
+
+      if (force_msg_updated){
+        robot_msg.A_LF.force.force_x = force_fb_msg.force(0).force_x();
+        robot_msg.A_LF.force.force_y = force_fb_msg.force(0).force_y();
+        robot_msg.B_RF.force.force_x = force_fb_msg.force(1).force_x();
+        robot_msg.B_RF.force.force_y = force_fb_msg.force(1).force_y();
+        robot_msg.C_RH.force.force_x = force_fb_msg.force(2).force_x();
+        robot_msg.C_RH.force.force_y = force_fb_msg.force(2).force_y();
+        robot_msg.D_LH.force.force_x = force_fb_msg.force(3).force_x();
+        robot_msg.D_LH.force.force_y = force_fb_msg.force(3).force_y();
+      }
 
       mtx.unlock();
 
