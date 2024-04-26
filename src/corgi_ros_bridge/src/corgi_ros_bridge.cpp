@@ -237,12 +237,20 @@ int main(int argc, char **argv) {
       if (force_msg_updated){
         robot_msg.A_LF.force.force_x = force_fb_msg.force(0).force_x();
         robot_msg.A_LF.force.force_y = force_fb_msg.force(0).force_y();
+        robot_msg.A_LF.force.pose_x = force_fb_msg.force(0).pose_x();
+        robot_msg.A_LF.force.pose_y = force_fb_msg.force(0).pose_y();
         robot_msg.B_RF.force.force_x = force_fb_msg.force(1).force_x();
         robot_msg.B_RF.force.force_y = force_fb_msg.force(1).force_y();
+        robot_msg.B_RF.force.pose_x = force_fb_msg.force(1).pose_x();
+        robot_msg.B_RF.force.pose_y = force_fb_msg.force(1).pose_y();
         robot_msg.C_RH.force.force_x = force_fb_msg.force(2).force_x();
         robot_msg.C_RH.force.force_y = force_fb_msg.force(2).force_y();
+        robot_msg.C_RH.force.pose_x = force_fb_msg.force(2).pose_x();
+        robot_msg.C_RH.force.pose_y = force_fb_msg.force(2).pose_y();
         robot_msg.D_LH.force.force_x = force_fb_msg.force(3).force_x();
         robot_msg.D_LH.force.force_y = force_fb_msg.force(3).force_y();
+        robot_msg.D_LH.force.pose_x = force_fb_msg.force(3).pose_x();
+        robot_msg.D_LH.force.pose_y = force_fb_msg.force(3).pose_y();
       }
 
       mtx.unlock();
