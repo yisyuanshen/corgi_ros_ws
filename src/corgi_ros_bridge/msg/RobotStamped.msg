@@ -1,3 +1,4 @@
+string msg_type
 LegStamped A_LF
 LegStamped B_RF
 LegStamped C_RH
