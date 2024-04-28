@@ -21,6 +21,8 @@ force_msg::LegForceStamped force_fb_msg;
 robot_msg::State robot_fb_msg;
 corgi_ros_bridge::RobotStamped ros_robot_fb_msg;
 
+corgi_ros_bridge::RobotStamped robot_state_msg;
+
 int motor_msg_updated;
 int force_msg_updated;
 int robot_msg_updated;
@@ -166,8 +168,6 @@ int main(int argc, char **argv) {
 
         
         if (robot_msg_updated || force_msg_updated || motor_msg_updated){
-            corgi_ros_bridge::RobotStamped robot_state_msg;
-
             mtx.lock();
 
             if (robot_msg_updated){
