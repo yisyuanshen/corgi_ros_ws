@@ -2,8 +2,7 @@
     <param name="/use_sim_time" value="true"/>
     <env name="CORE_LOCAL_IP" value="127.0.0.1"/>
     <env name="CORE_MASTER_ADDR" value="127.0.0.1:10010"/>
-    <node name="run_NodeCore" pkg="corgi_ros_bridge" type="run_NodeCore.sh" output="screen" />
-    <!-- <node name="run_webots" pkg="corgi_ros_bridge" type="run_webots.sh" output="screen" /> -->
+    <node name="run_webots" pkg="corgi_ros_bridge" type="run_webots.sh" output="screen" />
     <node name="run_bridge" pkg="corgi_ros_bridge" type="run_bridge.sh" output="screen" />
-    <!-- <node name="corgi_ros_bridge_webots" pkg="corgi_ros_bridge" type="corgi_ros_bridge_webots" output="screen" launch-prefix="bash -c 'sleep 5; exec $0 $@'" />  -->
+    <!-- <node name="corgi_ros_bridge_webots" pkg="corgi_ros_bridge" type="corgi_ros_bridge_webots" output="screen" launch-prefix="bash -c 'sleep 3; exec $0 $@'" />  -->
 </launch>

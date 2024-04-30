@@ -84,19 +84,20 @@ int main(int argc, char **argv) {
     core::Publisher<motor_msg::MotorStamped> &motor_pub = nh_.advertise<motor_msg::MotorStamped>("motor/command");
     core::Publisher<force_msg::LegForceStamped> &force_pub = nh_.advertise<force_msg::LegForceStamped>("force/command");
     
-    core::Rate rate(1000);
+    double rt = 100.0;
+    core::Rate rate(rt);
     
     int count = 0;
-    while (ros::ok()) {
+    while (ros::ok()) {        
         ROS_INFO_STREAM("Loop Count: " << count);
 
         rosgraph_msgs::Clock clock_msg;
-        clock_msg.clock.fromSec(count*0.001);
+        clock_msg.clock.fromSec(count/rt);
         ros_clock_pub.publish(clock_msg);
 
         ros::spinOnce();
         core::spinOnce();
-
+        
         if (ros_robot_msg_updated){
             if (ros_robot_fb_msg.msg_type == "force"){
                 force_msg::LegForceStamped force_cmd_msg;
@@ -269,7 +270,7 @@ int main(int argc, char **argv) {
             
             ros_robot_pub.publish(robot_state_msg);
         }
-
+        
         count += 1;
 
         rate.sleep();
