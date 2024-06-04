@@ -79,12 +79,12 @@ int main(int argc, char **argv) {
     
     core::NodeHandler nh_;
     core::Subscriber<motor_msg::MotorStamped> &motor_sub = nh_.subscribe<motor_msg::MotorStamped>("motor/state", 1000, motor_feedback_cb);
-    // core::Subscriber<force_msg::LegForceStamped> &force_sub = nh_.subscribe<force_msg::LegForceStamped>("force/state", 1000, force_feedback_cb);
-    core::Subscriber<force_msg::LegForceStamped> &force_sub = nh_.subscribe<force_msg::LegForceStamped>("robot/force_state", 1000, force_feedback_cb);
+    core::Subscriber<force_msg::LegForceStamped> &force_sub = nh_.subscribe<force_msg::LegForceStamped>("force/state", 1000, force_feedback_cb);
+    // core::Subscriber<force_msg::LegForceStamped> &force_sub = nh_.subscribe<force_msg::LegForceStamped>("robot/force_state", 1000, force_feedback_cb);
     core::Subscriber<robot_msg::State> &robot_state_sub = nh_.subscribe<robot_msg::State>("robot/state", 1000, robot_feedback_cb);
     core::Publisher<motor_msg::MotorStamped> &motor_pub = nh_.advertise<motor_msg::MotorStamped>("motor/command");
-    // core::Publisher<force_msg::LegForceStamped> &force_pub = nh_.advertise<force_msg::LegForceStamped>("force/command");
-    core::Publisher<force_msg::LegForceStamped> &force_pub = nh_.advertise<force_msg::LegForceStamped>("robot/force_command");
+    core::Publisher<force_msg::LegForceStamped> &force_pub = nh_.advertise<force_msg::LegForceStamped>("force/command");
+    // core::Publisher<force_msg::LegForceStamped> &force_pub = nh_.advertise<force_msg::LegForceStamped>("robot/force_command");
     
     double rt = 100.0;
     core::Rate rate(rt);

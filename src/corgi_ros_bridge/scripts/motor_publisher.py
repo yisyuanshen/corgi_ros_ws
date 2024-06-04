@@ -24,8 +24,14 @@ def publish_motor_data():
 
         motor_cmd_msg.msg_type = 'motor'
         
-        theta = 30
-        beta = 0
+        if count < 200:
+            theta = 17 + 100 / 200 * count
+            beta = 0
+        else:
+            theta = 17 + 50 * (math.cos((count-200)/100*math.pi)+1)
+            beta = 50 * (-math.cos((count-200)/200*math.pi)+1)
+        
+        print(f'TB = ({theta}, {beta})')
         
         motor_cmd_msg.A_LF.theta = math.radians(theta)
         motor_cmd_msg.A_LF.beta  = math.radians(-beta)
