@@ -406,7 +406,7 @@ int main(int argc, char **argv) {
         
         count += 1;
 
-        rate.sleep();
+        ROS_INFO_STREAM(rate.sleep());
     }
 
     ROS_INFO("Shutting down the node...");

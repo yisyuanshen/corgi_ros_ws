@@ -24,12 +24,15 @@ def publish_motor_data():
 
         motor_cmd_msg.msg_type = 'motor'
         
-        if count < 200:
-            theta = 17 + 100 / 200 * count
-            beta = 0
-        else:
-            theta = 17 + 50 * (math.cos((count-200)/100*math.pi)+1)
-            beta = 50 * (-math.cos((count-200)/200*math.pi)+1)
+        # if count < 200:
+        #     theta = 17 + 100 / 200 * count
+        #     beta = 0
+        # else:
+        #     theta = 17 + 50 * (math.cos((count-200)/100*math.pi)+1)
+        #     beta = 50 * (-math.cos((count-200)/200*math.pi)+1)
+        
+        theta = 17 - 40 * (math.cos(count/300*math.pi)-1)
+        beta = 0
         
         print(f'TB = ({theta}, {beta})')
         
