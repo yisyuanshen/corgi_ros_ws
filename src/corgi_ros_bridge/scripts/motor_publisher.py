@@ -18,23 +18,17 @@ def publish_motor_data():
     
     count = 0
     while not rospy.is_shutdown():
-        rospy.loginfo(f'ROS Clock: {rospy.get_rostime()}')
+        rospy.loginfo(f'Motor Command Published')
         
         motor_cmd_msg = RobotStamped()
 
         motor_cmd_msg.msg_type = 'motor'
         
-        # if count < 200:
-        #     theta = 17 + 100 / 200 * count
-        #     beta = 0
-        # else:
-        #     theta = 17 + 50 * (math.cos((count-200)/100*math.pi)+1)
-        #     beta = 50 * (-math.cos((count-200)/200*math.pi)+1)
         
-        theta = 17 - 40 * (math.cos(count/300*math.pi)-1)
-        beta = 0
+        if count < 1000:
+            theta = 17 + 90 * count / 1000
+            beta = 0
         
-        print(f'TB = ({theta}, {beta})')
         
         motor_cmd_msg.A_LF.theta = math.radians(theta)
         motor_cmd_msg.A_LF.beta  = math.radians(-beta)
@@ -51,62 +45,21 @@ def publish_motor_data():
         phi_D = tb2phi(theta=motor_cmd_msg.D_LH.theta, beta=motor_cmd_msg.D_LH.beta)
         
         motor_cmd_msg.A_LF.motor_r.angle = phi_A[0]
-        motor_cmd_msg.A_LF.motor_l.angle = phi_A[1]
-        motor_cmd_msg.B_RF.motor_r.angle = phi_B[0]
-        motor_cmd_msg.B_RF.motor_l.angle = phi_B[1]
-        motor_cmd_msg.C_RH.motor_r.angle = phi_C[0]
-        motor_cmd_msg.C_RH.motor_l.angle = phi_C[1]
-        motor_cmd_msg.D_LH.motor_r.angle = phi_D[0]
-        motor_cmd_msg.D_LH.motor_l.angle = phi_D[1]
-        
-        motor_cmd_msg.A_LF.motor_r.twist = 0
         motor_cmd_msg.A_LF.motor_r.torque = 0
-        motor_cmd_msg.A_LF.motor_r.kp = 90
-        motor_cmd_msg.A_LF.motor_r.ki = 0
-        motor_cmd_msg.A_LF.motor_r.kd = 1.75
-        
-        motor_cmd_msg.A_LF.motor_l.twist = 0
+        motor_cmd_msg.A_LF.motor_l.angle = phi_A[1]
         motor_cmd_msg.A_LF.motor_l.torque = 0
-        motor_cmd_msg.A_LF.motor_l.kp = 90
-        motor_cmd_msg.A_LF.motor_l.ki = 0
-        motor_cmd_msg.A_LF.motor_l.kd = 1.75
-        
-        motor_cmd_msg.B_RF.motor_r.twist = 0
+        motor_cmd_msg.B_RF.motor_r.angle = phi_B[0]
         motor_cmd_msg.B_RF.motor_r.torque = 0
-        motor_cmd_msg.B_RF.motor_r.kp = 90
-        motor_cmd_msg.B_RF.motor_r.ki = 0
-        motor_cmd_msg.B_RF.motor_r.kd = 1.75
-        
-        motor_cmd_msg.B_RF.motor_l.twist = 0
+        motor_cmd_msg.B_RF.motor_l.angle = phi_B[1]
         motor_cmd_msg.B_RF.motor_l.torque = 0
-        motor_cmd_msg.B_RF.motor_l.kp = 90
-        motor_cmd_msg.B_RF.motor_l.ki = 0
-        motor_cmd_msg.B_RF.motor_l.kd = 1.75
-        
-        motor_cmd_msg.C_RH.motor_r.twist = 0
+        motor_cmd_msg.C_RH.motor_r.angle = phi_C[0]
         motor_cmd_msg.C_RH.motor_r.torque = 0
-        motor_cmd_msg.C_RH.motor_r.kp = 90
-        motor_cmd_msg.C_RH.motor_r.ki = 0
-        motor_cmd_msg.C_RH.motor_r.kd = 1.75
-        
-        motor_cmd_msg.C_RH.motor_l.twist = 0
+        motor_cmd_msg.C_RH.motor_l.angle = phi_C[1]
         motor_cmd_msg.C_RH.motor_l.torque = 0
-        motor_cmd_msg.C_RH.motor_l.kp = 90
-        motor_cmd_msg.C_RH.motor_l.ki = 0
-        motor_cmd_msg.C_RH.motor_l.kd = 1.75
-        
-        motor_cmd_msg.D_LH.motor_r.twist = 0
+        motor_cmd_msg.D_LH.motor_r.angle = phi_D[0]
         motor_cmd_msg.D_LH.motor_r.torque = 0
-        motor_cmd_msg.D_LH.motor_r.kp = 90
-        motor_cmd_msg.D_LH.motor_r.ki = 0
-        motor_cmd_msg.D_LH.motor_r.kd = 1.75
-        
-        motor_cmd_msg.D_LH.motor_l.twist = 0
+        motor_cmd_msg.D_LH.motor_l.angle = phi_D[1]
         motor_cmd_msg.D_LH.motor_l.torque = 0
-        motor_cmd_msg.D_LH.motor_l.kp = 90
-        motor_cmd_msg.D_LH.motor_l.ki = 0
-        motor_cmd_msg.D_LH.motor_l.kd = 1.75
-        
         
         pub.publish(motor_cmd_msg)
 

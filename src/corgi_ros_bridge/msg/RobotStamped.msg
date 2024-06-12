@@ -1,3 +1,4 @@
+Header header
 string msg_type
 LegStamped A_LF
 LegStamped B_RF

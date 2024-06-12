@@ -60,6 +60,7 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "bit": "cpp",
-        "csignal": "cpp"
+        "csignal": "cpp",
+        "list": "cpp"
     }
 }

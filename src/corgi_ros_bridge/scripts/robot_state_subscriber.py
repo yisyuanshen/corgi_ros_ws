@@ -27,7 +27,7 @@ def robot_state_callback(msg):
                 )
     
 def listen_to_robot_state():
-    rospy.init_node('robot_state_subscriber', anonymous=True)
+    rospy.init_node('robot_state_subscriber')
     rospy.Subscriber('robot/state', RobotStamped, robot_state_callback)
     rospy.spin()
 

@@ -1,0 +1,39 @@
+LF_Module:
+  KP: 85
+  KI: 0
+  KD: 1.75
+  M_d: [0.652, 0.652]
+  K_0: [20000, 20000]
+  D_d: [400, 600]
+  Adaptive_pid_x: [1000, 0, 50]
+  Adaptive_pid_y: [3000, 1800, 50]
+
+RF_Module:
+  KP: 85
+  KI: 0
+  KD: 1.75
+  M_d: [0.652, 0.652]
+  K_0: [20000, 20000]
+  D_d: [400, 600]
+  Adaptive_pid_x: [1000, 0, 50]
+  Adaptive_pid_y: [3000, 1800, 50]
+
+RH_Module:
+  KP: 85
+  KI: 0
+  KD: 1.75
+  M_d: [0.652, 0.652]
+  K_0: [20000, 20000]
+  D_d: [400, 600]
+  Adaptive_pid_x: [1000, 0, 50]
+  Adaptive_pid_y: [3000, 1800, 50]
+
+LH_Module:
+  KP: 85
+  KI: 0
+  KD: 1.75
+  M_d: [0.652, 0.652]
+  K_0: [20000, 20000]
+  D_d: [400, 600]
+  Adaptive_pid_x: [1000, 0, 50]
+  Adaptive_pid_y: [3000, 1800, 50]
