@@ -16,7 +16,7 @@ void force_feedback_cb(force_msg::LegForceStamped msg)
     mtx.unlock();
 }
 
-void robot_feedback_cb(robot_msg::State msg)
+void robot_feedback_cb(robot_msg::StateStamped msg)
 {
     mtx.lock();
     robot_fb_msg = msg;
@@ -69,7 +69,7 @@ int main(int argc, char **argv)
     core::Subscriber<motor_msg::MotorStamped> &motor_sub = nh_.subscribe<motor_msg::MotorStamped>("motor/state", 1000, motor_feedback_cb);
     // core::Subscriber<force_msg::LegForceStamped> &force_sub = nh_.subscribe<force_msg::LegForceStamped>("force/state", 1000, force_feedback_cb);
     core::Subscriber<force_msg::LegForceStamped> &force_sub = nh_.subscribe<force_msg::LegForceStamped>("robot/force_state", 1000, force_feedback_cb);
-    core::Subscriber<robot_msg::State> &robot_state_sub = nh_.subscribe<robot_msg::State>("robot/state", 1000, robot_feedback_cb);
+    core::Subscriber<robot_msg::StateStamped> &robot_state_sub = nh_.subscribe<robot_msg::StateStamped>("robot/state", 1000, robot_feedback_cb);
     core::Publisher<motor_msg::MotorStamped> &motor_pub = nh_.advertise<motor_msg::MotorStamped>("motor/command");
     // core::Publisher<force_msg::LegForceStamped> &force_pub = nh_.advertise<force_msg::LegForceStamped>("force/command");
     core::Publisher<force_msg::LegForceStamped> &force_pub = nh_.advertise<force_msg::LegForceStamped>("robot/force_command");
@@ -273,19 +273,19 @@ int main(int argc, char **argv)
 
             if (robot_msg_updated)
             {
-                robot_state_msg.pose.position.x = robot_fb_msg.pose().position().x();
-                robot_state_msg.pose.position.y = robot_fb_msg.pose().position().y();
-                robot_state_msg.pose.position.z = robot_fb_msg.pose().position().z();
-                robot_state_msg.pose.orientation.x = robot_fb_msg.pose().orientation().x();
-                robot_state_msg.pose.orientation.y = robot_fb_msg.pose().orientation().y();
-                robot_state_msg.pose.orientation.z = robot_fb_msg.pose().orientation().z();
-                robot_state_msg.pose.orientation.w = robot_fb_msg.pose().orientation().w();
-                robot_state_msg.twist.linear.x = robot_fb_msg.twist().linear().x();
-                robot_state_msg.twist.linear.y = robot_fb_msg.twist().linear().y();
-                robot_state_msg.twist.linear.z = robot_fb_msg.twist().linear().z();
-                robot_state_msg.twist.angular.x = robot_fb_msg.twist().angular().x();
-                robot_state_msg.twist.angular.y = robot_fb_msg.twist().angular().y();
-                robot_state_msg.twist.angular.z = robot_fb_msg.twist().angular().z();
+                robot_state_msg.pose.position.x = robot_fb_msg.state().pose().position().x();
+                robot_state_msg.pose.position.y = robot_fb_msg.state().pose().position().y();
+                robot_state_msg.pose.position.z = robot_fb_msg.state().pose().position().z();
+                robot_state_msg.pose.orientation.x = robot_fb_msg.state().pose().orientation().x();
+                robot_state_msg.pose.orientation.y = robot_fb_msg.state().pose().orientation().y();
+                robot_state_msg.pose.orientation.z = robot_fb_msg.state().pose().orientation().z();
+                robot_state_msg.pose.orientation.w = robot_fb_msg.state().pose().orientation().w();
+                robot_state_msg.twist.linear.x = robot_fb_msg.state().twist().linear().x();
+                robot_state_msg.twist.linear.y = robot_fb_msg.state().twist().linear().y();
+                robot_state_msg.twist.linear.z = robot_fb_msg.state().twist().linear().z();
+                robot_state_msg.twist.angular.x = robot_fb_msg.state().twist().angular().x();
+                robot_state_msg.twist.angular.y = robot_fb_msg.state().twist().angular().y();
+                robot_state_msg.twist.angular.z = robot_fb_msg.state().twist().angular().z();
 
                 robot_msg_updated = 0;
                 ROS_INFO_STREAM("Robot State Received");

@@ -21,7 +21,7 @@
 
 motor_msg::MotorStamped motor_fb_msg;
 force_msg::LegForceStamped force_fb_msg;
-robot_msg::State robot_fb_msg;
+robot_msg::StateStamped robot_fb_msg;
 
 corgi_ros_bridge::RobotStamped ros_robot_fb_msg;
 corgi_ros_bridge::RobotStamped robot_state_msg;
