@@ -1,5 +1,5 @@
 build
 devel
 logs
+.vscode
 .catkin_tools
-**/.vscode

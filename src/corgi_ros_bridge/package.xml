@@ -1,77 +1,85 @@
-<?xml version="2.0"?>
+<?xml version="1.0"?>
 <package format="2">
+  <!-- Package Name -->
   <name>corgi_ros_bridge</name>
+
+  <!-- Version Number -->
   <version>0.0.0</version>
-  <description>The quad1 package</description>
 
-  <!-- One maintainer tag required, multiple allowed, one person per tag -->
-  <!-- Example:  -->
-  <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
-  <maintainer email="yisyuanshen@todo.todo">Eason Shen</maintainer>
+  <!-- Package Description -->
+  <description>
+    This is corgi_ros_bridge package.
+  </description>
 
+  <!-- Maintainer Information -->
+  <maintainer email="r12522823@ntu.edu.tw">Eason Shen</maintainer>
 
-  <!-- One license tag required, multiple allowed, one license per tag -->
-  <!-- Commonly used license strings: -->
-  <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
-  <license>TODO</license>
+  <!-- License Information -->
+  <license>MIT</license>
 
+  <!-- Author Information -->
+  <!-- If you have additional authors, add them here -->
+  <!-- Example:
+       <author email="john.doe@example.com">John Doe</author>
+  -->
 
-  <!-- Url tags are optional, but multiple are allowed, one per tag -->
-  <!-- Optional attribute type can be: website, bugtracker, or repository -->
-  <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/quad1</url> -->
+  <!-- URL Information -->
+  <!-- Optional: Add links to the website, repository, or bug tracker -->
+  <!-- Examples:
+       <url type="website">http://wiki.ros.org/corgi_ros_bridge</url>
+       <url type="repository">https://github.com/yourusername/corgi_ros_bridge</url>
+       <url type="bugtracker">https://github.com/yourusername/corgi_ros_bridge/issues</url>
+  -->
 
-
-  <!-- Author tags are optional, multiple are allowed, one per tag -->
-  <!-- Authors do not have to be maintainers, but could be -->
-  <!-- Example: -->
-  <!-- <author email="jane.doe@example.com">Jane Doe</author> -->
-
-
-  <!-- The *depend tags are used to specify dependencies -->
-  <!-- Dependencies can be catkin packages or system dependencies -->
-  <!-- Examples: -->
-  <!-- Use depend as a shortcut for packages that are both build and exec dependencies -->
-  <!--   <depend>roscpp</depend> -->
-  <!--   Note that this is equivalent to the following: -->
-  <!--   <build_depend>roscpp</build_depend> -->
-  <!--   <exec_depend>roscpp</exec_depend> -->
-  <!-- Use build_depend for packages you need at compile time: -->
-  <!--   <build_depend>message_generation</build_depend> -->
-  <!-- Use build_export_depend for packages you need in order to build against this package: -->
-  <!--   <build_export_depend>message_generation</build_export_depend> -->
-  <!-- Use buildtool_depend for build tool packages: -->
-  <!--   <buildtool_depend>catkin</buildtool_depend> -->
-  <!-- Use exec_depend for packages you need at runtime: -->
-  <!--   <exec_depend>message_runtime</exec_depend> -->
-  <!-- Use test_depend for packages you need only for testing: -->
-  <!--   <test_depend>gtest</test_depend> -->
-  <!-- Use doc_depend for packages you need only for building documentation: -->
-  <!--   <doc_depend>doxygen</doc_depend> -->
+  <!-- Build Tool Dependencies -->
+  <!-- 'catkin' is required for building ROS packages -->
   <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- Build Dependencies -->
+  <!-- Packages required at compile time -->
+  <build_depend>corgi_msgs</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>rospy</build_depend>
   <build_depend>std_msgs</build_depend>
+  <build_depend>rosgraph_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>message_generation</build_depend>
+
+  <!-- Build Export Dependencies -->
+  <!-- Packages needed when other packages build against this package -->
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>rospy</build_export_depend>
   <build_export_depend>std_msgs</build_export_depend>
-  <build_depend>geometry_msgs</build_depend>
-  <build_depend>message_generation</build_depend>
-  <!-- Use build_export_depend for packages you need in order to build against this package: -->
-  <!--   <build_export_depend>message_generation</build_export_depend> -->
-  <!-- Use buildtool_depend for build tool packages: -->
-  <!--   <buildtool_depend>catkin</buildtool_depend> -->
-  <!-- Use exec_depend for packages you need at runtime: -->
-  <exec_depend>message_runtime</exec_depend>
+  <build_export_depend>rosgraph_msgs</build_export_depend>
+  <build_export_depend>geometry_msgs</build_export_depend>
+  <build_export_depend>message_runtime</build_export_depend>
+
+  <!-- Execution Dependencies -->
+  <!-- Packages required at runtime -->
+  <exec_depend>corgi_msgs</exec_depend>
   <exec_depend>roscpp</exec_depend>
   <exec_depend>rospy</exec_depend>
   <exec_depend>std_msgs</exec_depend>
+  <exec_depend>rosgraph_msgs</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
-  
+  <exec_depend>message_runtime</exec_depend>
+  <exec_depend>message_generation</exec_depend>
 
-  <!-- The export tag contains other, unspecified, tags -->
+  <!-- Test Dependencies -->
+  <!-- Optional: Packages needed only for testing -->
+  <!-- Example:
+       <test_depend>gtest</test_depend>
+  -->
+
+  <!-- Documentation Dependencies -->
+  <!-- Optional: Packages needed only for building documentation -->
+  <!-- Example:
+       <doc_depend>doxygen</doc_depend>
+  -->
+
+  <!-- Export Tag -->
+  <!-- Additional information can be placed here -->
   <export>
-    <!-- Other tools can request additional information be placed here -->
-
+    <!-- For example, exporting plugin information -->
   </export>
 </package>

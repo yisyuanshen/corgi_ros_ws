@@ -1,0 +1,7 @@
+<launch>
+    <!-- <env name="CORE_LOCAL_IP" value="192.168.0.107"/>
+    <env name="CORE_MASTER_ADDR" value="192.168.0.106:10010"/> -->
+    <!-- <env name="CORE_LOCAL_IP" value="127.0.0.1"/>
+    <env name="CORE_MASTER_ADDR" value="127.0.0.1:10010"/> -->
+    <node name="corgi_ros_bridge" pkg="corgi_ros_bridge" type="corgi_ros_bridge.sh" output="screen" />
+</launch>
