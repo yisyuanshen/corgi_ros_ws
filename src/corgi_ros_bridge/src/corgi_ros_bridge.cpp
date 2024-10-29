@@ -15,7 +15,6 @@
 #include "corgi_msgs/PowerCmdStamped.h"
 #include "corgi_msgs/PowerStateStamped.h"
 
-
 std::mutex mutex_ros_motor_state;
 std::mutex mutex_ros_power_state;
 std::mutex mutex_grpc_motor_cmd;
@@ -31,29 +30,7 @@ power_msg::PowerCmdStamped      grpc_power_cmd;
 motor_msg::MotorStateStamped    grpc_motor_state;
 power_msg::PowerStateStamped    grpc_power_state;
 
-
-void publish_grpc_motor_cmd(core::Publisher<motor_msg::MotorCmdStamped>& grpc_motor_cmd_pub) {
-    std::lock_guard<std::mutex> lock(mutex_grpc_motor_cmd);
-    grpc_motor_cmd_pub.publish(grpc_motor_cmd);
-}
-
-void publish_grpc_power_cmd(core::Publisher<power_msg::PowerCmdStamped>& grpc_power_cmd_pub) {
-    std::lock_guard<std::mutex> lock(mutex_grpc_power_cmd);
-    grpc_power_cmd_pub.publish(grpc_power_cmd);
-}
-
-void publish_ros_motor_state(ros::Publisher& ros_motor_state_pub) {
-    std::lock_guard<std::mutex> lock(mutex_ros_motor_state);
-    ros_motor_state_pub.publish(ros_motor_state);
-}
-
-void publish_ros_power_state(ros::Publisher& ros_power_state_pub) {
-    std::lock_guard<std::mutex> lock(mutex_ros_power_state);
-    ros_power_state_pub.publish(ros_power_state);
-}
-
-
-void ros_motor_cmd_cb(corgi_msgs::MotorCmdStamped cmd) {
+void ros_motor_cmd_cb(const corgi_msgs::MotorCmdStamped cmd) {
     std::lock_guard<std::mutex> lock(mutex_grpc_motor_cmd);
 
     ros_motor_cmd = cmd;
@@ -72,9 +49,9 @@ void ros_motor_cmd_cb(corgi_msgs::MotorCmdStamped cmd) {
         ros_motor_cmd.module_d
     };
 
-    for (int i=0; i<4; i++){
+    for (int i = 0; i < 4; i++) {
         grpc_motor_modules[i]->set_theta(ros_motor_modules[i].theta);
-        grpc_motor_modules[i]->set_beta(ros_motor_modules[i].theta);
+        grpc_motor_modules[i]->set_beta(ros_motor_modules[i].beta);
         grpc_motor_modules[i]->set_kp(ros_motor_modules[i].kp);
         grpc_motor_modules[i]->set_ki(ros_motor_modules[i].ki);
         grpc_motor_modules[i]->set_kd(ros_motor_modules[i].kd);
@@ -85,7 +62,7 @@ void ros_motor_cmd_cb(corgi_msgs::MotorCmdStamped cmd) {
     grpc_motor_cmd.mutable_header()->mutable_stamp()->set_usec(ros_motor_cmd.header.stamp.nsec);
 }
 
-void ros_power_cmd_cb(corgi_msgs::PowerCmdStamped cmd) {
+void ros_power_cmd_cb(const corgi_msgs::PowerCmdStamped cmd) {
     std::lock_guard<std::mutex> lock(mutex_grpc_power_cmd);
 
     ros_power_cmd = cmd;
@@ -93,36 +70,36 @@ void ros_power_cmd_cb(corgi_msgs::PowerCmdStamped cmd) {
     grpc_power_cmd.set_digital(ros_power_cmd.digital);
     grpc_power_cmd.set_power(ros_power_cmd.power);
     grpc_power_cmd.set_motor_mode((power_msg::MOTORMODE)ros_power_cmd.motor_mode);
-    
+
     grpc_power_cmd.mutable_header()->set_seq(ros_power_cmd.header.seq);
     grpc_power_cmd.mutable_header()->mutable_stamp()->set_sec(ros_power_cmd.header.stamp.sec);
     grpc_power_cmd.mutable_header()->mutable_stamp()->set_usec(ros_power_cmd.header.stamp.nsec);
 }
 
-void grpc_motor_state_cb(motor_msg::MotorStateStamped state) {
+void grpc_motor_state_cb(const motor_msg::MotorStateStamped state) {
     std::lock_guard<std::mutex> lock(mutex_ros_motor_state);
 
     grpc_motor_state = state;
-    
-    std::vector<motor_msg::MotorState> grpc_motor_modules = {
-        grpc_motor_state.module_a(),
-        grpc_motor_state.module_b(),
-        grpc_motor_state.module_c(),
-        grpc_motor_state.module_d()
+
+    std::vector<const motor_msg::MotorState*> grpc_motor_modules = {
+        &grpc_motor_state.module_a(),
+        &grpc_motor_state.module_b(),
+        &grpc_motor_state.module_c(),
+        &grpc_motor_state.module_d()
     };
 
-    std::vector<corgi_msgs::MotorState> ros_motor_modules = {
-        ros_motor_state.module_a,
-        ros_motor_state.module_b,
-        ros_motor_state.module_c,
-        ros_motor_state.module_d
+    std::vector<corgi_msgs::MotorState*> ros_motor_modules = {
+        &ros_motor_state.module_a,
+        &ros_motor_state.module_b,
+        &ros_motor_state.module_c,
+        &ros_motor_state.module_d
     };
 
-    for (int i=0; i<4; i++){
-        ros_motor_modules[i].theta = grpc_motor_modules[i].theta();
-        ros_motor_modules[i].beta = grpc_motor_modules[i].beta();
-        ros_motor_modules[i].current_r = grpc_motor_modules[i].current_r();
-        ros_motor_modules[i].current_l = grpc_motor_modules[i].current_l();
+    for (int i = 0; i < 4; i++) {
+        ros_motor_modules[i]->theta = grpc_motor_modules[i]->theta();
+        ros_motor_modules[i]->beta = grpc_motor_modules[i]->beta();
+        ros_motor_modules[i]->current_r = grpc_motor_modules[i]->current_r();
+        ros_motor_modules[i]->current_l = grpc_motor_modules[i]->current_l();
     }
 
     ros_motor_state.header.seq = grpc_motor_state.header().seq();
@@ -130,11 +107,11 @@ void grpc_motor_state_cb(motor_msg::MotorStateStamped state) {
     ros_motor_state.header.stamp.nsec = grpc_motor_state.header().stamp().usec();
 }
 
-void grpc_power_state_cb(power_msg::PowerStateStamped state) {
+void grpc_power_state_cb(const power_msg::PowerStateStamped state) {
     std::lock_guard<std::mutex> lock(mutex_ros_power_state);
 
     grpc_power_state = state;
-    
+
     ros_power_state.v_0 = grpc_power_state.v_0();
     ros_power_state.i_0 = grpc_power_state.i_0();
     ros_power_state.v_1 = grpc_power_state.v_1();
@@ -164,7 +141,6 @@ void grpc_power_state_cb(power_msg::PowerStateStamped state) {
     ros_power_state.header.stamp.sec = grpc_power_state.header().stamp().sec();
     ros_power_state.header.stamp.nsec = grpc_power_state.header().stamp().usec();
 }
-
 
 int main(int argc, char **argv) {
     ROS_INFO_STREAM("corgi ros bridge started");
@@ -199,15 +175,25 @@ int main(int argc, char **argv) {
         ros::spinOnce();
         core::spinOnce();
 
-        std::thread motor_cmd_thread(publish_grpc_motor_cmd, std::ref(grpc_motor_cmd_pub));
-        std::thread power_cmd_thread(publish_grpc_power_cmd, std::ref(grpc_power_cmd_pub));
-        std::thread motor_state_thread(publish_ros_motor_state, std::ref(ros_motor_state_pub));
-        std::thread power_state_thread(publish_ros_power_state, std::ref(ros_power_state_pub));
+        {
+            std::lock_guard<std::mutex> lock(mutex_grpc_motor_cmd);
+            grpc_motor_cmd_pub.publish(grpc_motor_cmd);
+        }
 
-        motor_cmd_thread.join();
-        power_cmd_thread.join();
-        motor_state_thread.join();
-        power_state_thread.join();
+        {
+            std::lock_guard<std::mutex> lock(mutex_grpc_power_cmd);
+            grpc_power_cmd_pub.publish(grpc_power_cmd);
+        }
+
+        {
+            std::lock_guard<std::mutex> lock(mutex_ros_motor_state);
+            ros_motor_state_pub.publish(ros_motor_state);
+        }
+
+        {
+            std::lock_guard<std::mutex> lock(mutex_ros_power_state);
+            ros_power_state_pub.publish(ros_power_state);
+        }
 
         if (debug_mode) ROS_INFO_STREAM(" ");
 
