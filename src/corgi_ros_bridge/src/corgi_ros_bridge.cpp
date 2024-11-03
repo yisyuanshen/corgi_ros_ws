@@ -15,6 +15,7 @@
 #include "corgi_msgs/PowerCmdStamped.h"
 #include "corgi_msgs/PowerStateStamped.h"
 
+
 std::mutex mutex_ros_motor_state;
 std::mutex mutex_ros_power_state;
 std::mutex mutex_grpc_motor_cmd;
@@ -29,6 +30,7 @@ motor_msg::MotorCmdStamped      grpc_motor_cmd;
 power_msg::PowerCmdStamped      grpc_power_cmd;
 motor_msg::MotorStateStamped    grpc_motor_state;
 power_msg::PowerStateStamped    grpc_power_state;
+
 
 void ros_motor_cmd_cb(const corgi_msgs::MotorCmdStamped cmd) {
     std::lock_guard<std::mutex> lock(mutex_grpc_motor_cmd);
@@ -112,6 +114,10 @@ void grpc_power_state_cb(const power_msg::PowerStateStamped state) {
 
     grpc_power_state = state;
 
+    ros_power_state.digital = grpc_power_state.digital();
+    ros_power_state.power = grpc_power_state.power();
+    ros_power_state.motor_mode = grpc_power_state.motor_mode();
+
     ros_power_state.v_0 = grpc_power_state.v_0();
     ros_power_state.i_0 = grpc_power_state.i_0();
     ros_power_state.v_1 = grpc_power_state.v_1();
@@ -142,6 +148,7 @@ void grpc_power_state_cb(const power_msg::PowerStateStamped state) {
     ros_power_state.header.stamp.nsec = grpc_power_state.header().stamp().usec();
 }
 
+
 int main(int argc, char **argv) {
     ROS_INFO_STREAM("corgi ros bridge started");
 
@@ -168,9 +175,9 @@ int main(int argc, char **argv) {
     while (ros::ok()) {
         if (debug_mode) ROS_INFO_STREAM("Loop Count: " << loop_counter);
 
-        rosgraph_msgs::Clock clock_msg;
-        clock_msg.clock.fromSec(loop_counter * 0.001);
-        ros_clock_pub.publish(clock_msg);
+        // rosgraph_msgs::Clock clock_msg;
+        // clock_msg.clock.fromSec(loop_counter * 0.001);
+        // ros_clock_pub.publish(clock_msg);
 
         ros::spinOnce();
         core::spinOnce();
@@ -202,6 +209,8 @@ int main(int argc, char **argv) {
     }
 
     ROS_INFO("Shutting down the node...");
+
     ros::shutdown();
+    
     return 0;
 }

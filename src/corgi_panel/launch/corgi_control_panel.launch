@@ -1,3 +1,0 @@
-<launch>
-    <node name="corgi_control_panel" pkg="corgi_control_panel" type="corgi_control_panel.py" output="screen" />
-</launch>
