@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>csv_controller</name>
+  <name>csv_control</name>
   <version>0.0.0</version>
-  <description>The csv_controller package</description>
+  <description>The csv_control package</description>
   <maintainer email="r12522823@ntu.edu.tw">yisyuan</maintainer>
   <license>TODO</license>
 

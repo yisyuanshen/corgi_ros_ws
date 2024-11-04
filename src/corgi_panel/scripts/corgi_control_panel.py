@@ -92,13 +92,36 @@ class CorgiControlPanel(QWidget):
         
             
         ### Data Output File Name ###
-        self.label_output = QLabel('Output File Name (.csv):', self)
+        self.label_output = QLabel('Output File Name (.bag):', self)
         self.label_output.setStyleSheet('color: white; font-weight: bold;')
         
         self.edit_output = QLineEdit('', self)
         self.edit_output.setStyleSheet('''background-color: white;''')
         
-            
+        
+        ### CSV control Button ###
+        self.label_input = QLabel('Input File Name (.csv):', self)
+        self.label_input.setStyleSheet('color: white; font-weight: bold;')
+        
+        self.edit_input = QLineEdit('', self)
+        self.edit_input.setStyleSheet('''background-color: white;''')
+        
+        self.btn_input = QPushButton('Select', self)
+        self.btn_input.setStyleSheet('''QPushButton {background-color: white; color: black; text-align: center; border-radius: 5px;}
+                                        QPushButton:hover:!checked {background-color: silver; color: black;}
+                                        QPushButton:hover:pressed {background-color: gray; border-style: inset;}''')
+        self.btn_input.clicked.connect(self.select_orin_file)
+        
+        self.btn_csv = QPushButton('Run', self)
+        self.btn_csv.setCheckable(True)
+        self.btn_csv.setStyleSheet('''QPushButton {background-color: white; color: black; text-align: center; border-radius: 5px;}
+                                      QPushButton:checked {background-color: lightgray; color: black;}
+                                      QPushButton:hover:!checked {background-color: lightgray; color: black;}
+                                      QPushButton:hover:checked {background-color: silver; color: black;}
+                                      QPushButton:hover:pressed {background-color: silver; border-style: inset;}''')
+        self.btn_csv.clicked.connect(self.csv_control)
+        
+        
         ### Trigger Button ###
         self.btn_trigger = QPushButton('Trigger', self)
         self.btn_trigger.setCheckable(True)
@@ -161,6 +184,10 @@ class CorgiControlPanel(QWidget):
         layout.addWidget(vlines[0],            0, 2, 12,1)
         layout.addWidget(self.label_output,    0, 3, 1, 2)
         layout.addWidget(self.edit_output,     1, 3, 1, 2)
+        layout.addWidget(self.label_input,     2, 3, 1, 2)
+        layout.addWidget(self.edit_input,      3, 3, 1, 1)
+        layout.addWidget(self.btn_input,       3, 4, 1, 1)
+        layout.addWidget(self.btn_csv,         4, 3, 1, 2)
         layout.addWidget(self.btn_trigger,     8, 3, 1, 2)
         layout.addWidget(self.btn_reset,       9, 3, 1, 2)
         layout.addWidget(vlines[1],            0, 5, 12,1)
@@ -204,6 +231,17 @@ class CorgiControlPanel(QWidget):
         
         self.power_cmd_pub.publish(power_cmd)
     
+    
+    def select_orin_file(self):
+        pass
+    
+    
+    def csv_control(self):
+        if self.btn_csv.isChecked():
+            self.btn_csv.setText('Stop')
+        else:
+            self.btn_csv.setText('Execute')
+            
     
     def publish_trigger_cmd(self):
         trigger_cmd = TriggerStamped()

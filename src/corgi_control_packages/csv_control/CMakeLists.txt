@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 
-project(csv_controller LANGUAGES C CXX)
+project(csv_control LANGUAGES C CXX)
 
 set(CMAKE_EXE_LINKER_FLAGS)
 set(CMAKE_CXX_STANDARD 17)
