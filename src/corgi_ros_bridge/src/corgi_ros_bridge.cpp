@@ -1,6 +1,5 @@
 #include <iostream>
 #include <mutex>
-#include <thread>
 #include "ros/ros.h"
 
 #include "NodeHandler.h"
@@ -30,6 +29,11 @@ motor_msg::MotorCmdStamped      grpc_motor_cmd;
 power_msg::PowerCmdStamped      grpc_power_cmd;
 motor_msg::MotorStateStamped    grpc_motor_state;
 power_msg::PowerStateStamped    grpc_power_state;
+
+ros::Publisher ros_motor_state_pub;
+ros::Publisher ros_power_state_pub;
+core::Publisher<motor_msg::MotorCmdStamped> *grpc_motor_cmd_pub;
+core::Publisher<power_msg::PowerCmdStamped> *grpc_power_cmd_pub;
 
 
 void ros_motor_cmd_cb(const corgi_msgs::MotorCmdStamped cmd) {
@@ -62,6 +66,8 @@ void ros_motor_cmd_cb(const corgi_msgs::MotorCmdStamped cmd) {
     grpc_motor_cmd.mutable_header()->set_seq(ros_motor_cmd.header.seq);
     grpc_motor_cmd.mutable_header()->mutable_stamp()->set_sec(ros_motor_cmd.header.stamp.sec);
     grpc_motor_cmd.mutable_header()->mutable_stamp()->set_usec(ros_motor_cmd.header.stamp.nsec);
+
+    grpc_motor_cmd_pub->publish(grpc_motor_cmd);
 }
 
 void ros_power_cmd_cb(const corgi_msgs::PowerCmdStamped cmd) {
@@ -76,6 +82,8 @@ void ros_power_cmd_cb(const corgi_msgs::PowerCmdStamped cmd) {
     grpc_power_cmd.mutable_header()->set_seq(ros_power_cmd.header.seq);
     grpc_power_cmd.mutable_header()->mutable_stamp()->set_sec(ros_power_cmd.header.stamp.sec);
     grpc_power_cmd.mutable_header()->mutable_stamp()->set_usec(ros_power_cmd.header.stamp.nsec);
+
+    grpc_power_cmd_pub->publish(grpc_power_cmd);
 }
 
 void grpc_motor_state_cb(const motor_msg::MotorStateStamped state) {
@@ -107,6 +115,8 @@ void grpc_motor_state_cb(const motor_msg::MotorStateStamped state) {
     ros_motor_state.header.seq = grpc_motor_state.header().seq();
     ros_motor_state.header.stamp.sec = grpc_motor_state.header().stamp().sec();
     ros_motor_state.header.stamp.nsec = grpc_motor_state.header().stamp().usec();
+
+    ros_motor_state_pub.publish(ros_motor_state);
 }
 
 void grpc_power_state_cb(const power_msg::PowerStateStamped state) {
@@ -146,6 +156,8 @@ void grpc_power_state_cb(const power_msg::PowerStateStamped state) {
     ros_power_state.header.seq = grpc_power_state.header().seq();
     ros_power_state.header.stamp.sec = grpc_power_state.header().stamp().sec();
     ros_power_state.header.stamp.nsec = grpc_power_state.header().stamp().usec();
+
+    ros_power_state_pub.publish(ros_power_state);
 }
 
 
@@ -157,17 +169,17 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "corgi_ros_bridge");
 
     ros::NodeHandle nh;
-    ros::Publisher ros_clock_pub = nh.advertise<rosgraph_msgs::Clock>("/clock", 1000);
-    ros::Publisher ros_motor_state_pub = nh.advertise<corgi_msgs::MotorStateStamped>("motor/state", 1000);
-    ros::Publisher ros_power_state_pub = nh.advertise<corgi_msgs::PowerStateStamped>("power/state", 1000);
+    // ros::Publisher ros_clock_pub = nh.advertise<rosgrasph_msgs::Clock>("/clock", 1000);
     ros::Subscriber ros_motor_cmd_sub = nh.subscribe<corgi_msgs::MotorCmdStamped>("motor/command", 1000, ros_motor_cmd_cb);
     ros::Subscriber ros_power_cmd_sub = nh.subscribe<corgi_msgs::PowerCmdStamped>("power/command", 1000, ros_power_cmd_cb);
+    ros_motor_state_pub = nh.advertise<corgi_msgs::MotorStateStamped>("motor/state", 1000);
+    ros_power_state_pub = nh.advertise<corgi_msgs::PowerStateStamped>("power/state", 1000);
 
     core::NodeHandler nh_;
-    core::Publisher<motor_msg::MotorCmdStamped> &grpc_motor_cmd_pub = nh_.advertise<motor_msg::MotorCmdStamped>("motor/command");
-    core::Publisher<power_msg::PowerCmdStamped> &grpc_power_cmd_pub = nh_.advertise<power_msg::PowerCmdStamped>("power/command");
     core::Subscriber<motor_msg::MotorStateStamped> &grpc_motor_state_sub = nh_.subscribe<motor_msg::MotorStateStamped>("motor/state", 1000, grpc_motor_state_cb);
     core::Subscriber<power_msg::PowerStateStamped> &grpc_power_state_sub = nh_.subscribe<power_msg::PowerStateStamped>("power/state", 1000, grpc_power_state_cb);
+    grpc_motor_cmd_pub = &(nh_.advertise<motor_msg::MotorCmdStamped>("motor/command"));
+    grpc_power_cmd_pub = &(nh_.advertise<power_msg::PowerCmdStamped>("power/command"));
 
     core::Rate rate(1000);
 
@@ -181,26 +193,6 @@ int main(int argc, char **argv) {
 
         ros::spinOnce();
         core::spinOnce();
-
-        {
-            std::lock_guard<std::mutex> lock(mutex_grpc_motor_cmd);
-            grpc_motor_cmd_pub.publish(grpc_motor_cmd);
-        }
-
-        {
-            std::lock_guard<std::mutex> lock(mutex_grpc_power_cmd);
-            grpc_power_cmd_pub.publish(grpc_power_cmd);
-        }
-
-        {
-            std::lock_guard<std::mutex> lock(mutex_ros_motor_state);
-            ros_motor_state_pub.publish(ros_motor_state);
-        }
-
-        {
-            std::lock_guard<std::mutex> lock(mutex_ros_power_state);
-            ros_power_state_pub.publish(ros_power_state);
-        }
 
         if (debug_mode) ROS_INFO_STREAM(" ");
 

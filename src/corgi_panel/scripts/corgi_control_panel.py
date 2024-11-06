@@ -6,12 +6,14 @@ import subprocess
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from corgi_msgs.msg import *
+import paramiko
 
 class CorgiControlPanel(QWidget):
     def __init__(self):
         super(CorgiControlPanel, self).__init__()
         self.init_ui()
         self.init_ros()
+        self.reset()
 
     def init_ui(self):
         ### Digital Button ###
@@ -65,7 +67,7 @@ class CorgiControlPanel(QWidget):
         
 
         ### Mode Switch Button ###
-        self.label_mode = QLabel('Motor Mode Switch:')
+        self.label_mode = QLabel('Robot Mode Switch:')
         self.label_mode.setStyleSheet('color: white; font-weight: bold;')
         
         self.btn_group_mode = QButtonGroup(self)
@@ -90,6 +92,28 @@ class CorgiControlPanel(QWidget):
         
         self.btn_rest_mode.setChecked(True)
         
+        
+        ### Motor Mode Selection ###
+        self.btn_group_motor = QButtonGroup(self)
+        self.btn_group_motor.setExclusive(True)
+        
+        self.btn_rt_mode    = QPushButton('RT', self)
+        self.btn_csv_mode   = QPushButton('CSV', self)
+
+        btn_motor_list = [self.btn_rt_mode, self.btn_csv_mode]
+        btn_mode_style = '''QPushButton {background-color: white; color: black; text-align: center; border-radius: 5px;}
+                            QPushButton:checked {background-color: darkgreen; color: white;}
+                            QPushButton:hover:!checked {background-color: silver; color: black;}
+                            QPushButton:hover:pressed {background-color: mediumseagreen; border-style: inset;}'''
+
+        for btn in btn_motor_list:
+            btn.setCheckable(True)
+            btn.setStyleSheet(btn_mode_style)
+            btn.clicked.connect(self.publish_power_cmd)
+            self.btn_group_motor.addButton(btn)
+            
+        self.btn_rt_mode.setChecked(True)
+        
             
         ### Data Output File Name ###
         self.label_output = QLabel('Output File Name (.bag):', self)
@@ -99,7 +123,7 @@ class CorgiControlPanel(QWidget):
         self.edit_output.setStyleSheet('''background-color: white;''')
         
         
-        ### CSV control Button ###
+        ### CSV Control Button ###
         self.label_input = QLabel('Input File Name (.csv):', self)
         self.label_input.setStyleSheet('color: white; font-weight: bold;')
         
@@ -119,7 +143,7 @@ class CorgiControlPanel(QWidget):
                                       QPushButton:hover:!checked {background-color: lightgray; color: black;}
                                       QPushButton:hover:checked {background-color: silver; color: black;}
                                       QPushButton:hover:pressed {background-color: silver; border-style: inset;}''')
-        self.btn_csv.clicked.connect(self.csv_control)
+        self.btn_csv.clicked.connect(self.csv_control_cmd)
         
         
         ### Trigger Button ###
@@ -181,6 +205,8 @@ class CorgiControlPanel(QWidget):
         layout.addWidget(self.btn_set_zero,    6, 0, 1, 2)
         layout.addWidget(self.btn_hall_cal,    7, 0, 1, 2)
         layout.addWidget(self.btn_motor_mode,  8, 0, 1, 2)
+        layout.addWidget(self.btn_rt_mode,     9, 0, 1, 1)
+        layout.addWidget(self.btn_csv_mode,    9, 1, 1, 1)
         layout.addWidget(vlines[0],            0, 2, 12,1)
         layout.addWidget(self.label_output,    0, 3, 1, 2)
         layout.addWidget(self.edit_output,     1, 3, 1, 2)
@@ -216,10 +242,11 @@ class CorgiControlPanel(QWidget):
         self.trigger_pub = rospy.Publisher('trigger', TriggerStamped, queue_size=10)
         self.sensor_enable_pub = rospy.Publisher('sensor_enable', SensorEnableStamped, queue_size=10)
         
-        self.power_state_sub = rospy.Subscriber('/power/state', PowerStateStamped, self.update_status)
-        
-        self.recording_process = None
-        
+        self.power_state_sub = rospy.Subscriber('/power/state', PowerStateStamped, self.update_status)        
+    
+        self.ssh_orin = paramiko.SSHClient()
+        self.ssh_orin.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        # self.ssh_orin.connect('192.168.20.174', username='jetson', password='jetson')
         
     def publish_power_cmd(self):
         power_cmd = PowerCmdStamped()
@@ -230,18 +257,28 @@ class CorgiControlPanel(QWidget):
         power_cmd.motor_mode = self.btn_group_mode.checkedId()
         
         self.power_cmd_pub.publish(power_cmd)
-    
+        
+        self.btn_set_visible()
+        
     
     def select_orin_file(self):
         pass
     
-    
-    def csv_control(self):
+    def csv_control_cmd(self):
+        self.btn_set_visible()
+        
         if self.btn_csv.isChecked():
             self.btn_csv.setText('Stop')
-        else:
-            self.btn_csv.setText('Execute')
+            command = "source /opt/ros/noetic/setup.bash && source corgi_ws/corgi_ros_ws/devel/setup.bash && nohup rosrun corgi_ros_bridge corgi_ros_bridge"
             
+        else:
+            self.btn_csv.setText('Run')
+            command = "source /opt/ros/noetic/setup.bash && rosnode kill /corgi_ros_bridge"
+        
+        # stdin, stdout, stderr = self.ssh_orin.exec_command(command)
+        # print("Output:", stdout.read().decode())
+        # print("Error:", stderr.read().decode())
+        
     
     def publish_trigger_cmd(self):
         trigger_cmd = TriggerStamped()
@@ -250,34 +287,32 @@ class CorgiControlPanel(QWidget):
         trigger_cmd.enable = self.btn_trigger.isChecked()
         trigger_cmd.output_filename = self.edit_output.text()
         
-        if self.btn_trigger.isChecked() and self.edit_output.text() != '':
-            rosbag_folder = f'{os.environ["HOME"]}/corgi_ws/corgi_ros_ws/recorded_data/'
-            if not os.path.exists(rosbag_folder):
-                os.makedirs(rosbag_folder)
-            
-            rosbag_filename = rosbag_folder+self.edit_output.text()
-            while os.path.exists(f'{rosbag_filename}.bag'):
-                rosbag_filename += '_'
-            
-            self.recording_process = subprocess.Popen(['rosbag', 'record', '-a', '-O', f'{rosbag_filename}.bag'])
-            
-            QTimer.singleShot(1000, lambda: self.trigger_pub.publish(trigger_cmd))
-            
-        else:
-            self.trigger_pub.publish(trigger_cmd)
-            
-            if self.recording_process:
-                self.recording_process.terminate()
-                self.recording_process = None
-                print('Rosbag is ternimated.')
-            
+        self.trigger_pub.publish(trigger_cmd)
+                
+    
+    def btn_set_visible(self):
+        # self.label_mode.setVisible(self.btn_digital_on.isChecked() and self.btn_power_on.isChecked())
+        self.btn_rest_mode.setVisible(self.btn_digital_on.isChecked() and self.btn_power_on.isChecked())
+        self.btn_set_zero.setVisible(self.btn_digital_on.isChecked() and self.btn_power_on.isChecked() and not self.btn_motor_mode.isChecked())
+        self.btn_hall_cal.setVisible(self.btn_digital_on.isChecked() and self.btn_power_on.isChecked() and not self.btn_motor_mode.isChecked())
+        self.btn_motor_mode.setVisible(not self.btn_rest_mode.isChecked())
+        self.btn_csv_mode.setVisible(self.btn_motor_mode.isChecked())
+        self.btn_rt_mode.setVisible(self.btn_motor_mode.isChecked() and not self.btn_csv.isChecked())
+        self.label_input.setVisible(self.btn_csv_mode.isChecked())
+        self.edit_input.setVisible(self.btn_csv_mode.isChecked())
+        self.btn_input.setVisible(self.btn_csv_mode.isChecked())
+        self.btn_csv.setVisible(self.btn_csv_mode.isChecked())
+    
     
     def reset(self):
         self.btn_digital_off.setChecked(True)
         self.btn_power_off.setChecked(True)
         self.btn_rest_mode.setChecked(True)
+        self.btn_rt_mode.setChecked(True)
+        self.btn_csv.setChecked(False)
         self.btn_trigger.setChecked(False)
         
+        self.csv_control_cmd()
         self.publish_trigger_cmd()
         self.publish_power_cmd()
         
@@ -292,13 +327,14 @@ class CorgiControlPanel(QWidget):
     
     
     def closeEvent(self, event):
-        if self.recording_process:
-            self.recording_process.terminate()
-            self.recording_process = None
-            print('Rosbag is ternimated.')
-            
+        
         self.power_state_sub.unregister()
         super(CorgiControlPanel, self).closeEvent(event)
+                
+        self.reset()
+        
+        self.ssh_orin.close()
+        
         
 if __name__ == '__main__':
     app = QApplication(sys.argv)
