@@ -1,12 +1,6 @@
 #!/bin/bash
-trap "kill 0" INT
+rosrun corgi_ros_bridge corgi_ros_bridge &
+BRIDGE_PID=$!
 
-(
-    grpccore &
-    sleep 1
-    # rosrun corgi_ros_bridge corgi_ros_bridge log
-    rosrun corgi_ros_bridge corgi_ros_bridge &
-    rosrun corgi_virtual_agent corgi_virtual_agent
-) &
-
-wait
+trap "kill $BRIDGE_PID; exit;" INT
+wait $BRIDGE_PID

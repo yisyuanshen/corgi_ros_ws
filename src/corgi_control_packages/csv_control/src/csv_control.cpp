@@ -44,17 +44,48 @@ int main(int argc, char **argv) {
 
     std::ifstream csv_file(csv_file_path);
     if (!csv_file.is_open()) {
+        ROS_INFO("Failed to open the CSV file.");
         std::cerr << "Failed to open the csv file.\n";
         return 1;
     }
 
     std::string line;
     
+
+    ROS_INFO("Leg Transform Starts.");
+    
+    for (int i=0; i<5000; i++){
+        // std::vector<double> columns;
+        // std::stringstream ss(line);
+        // std::string item;
+        
+        // for (auto& cmd : motor_cmds){
+        //     std::getline(ss, item, ',');
+        //     cmd->theta = std::stod(item);
+
+        //     std::getline(ss, item, ',');
+        //     cmd->beta = std::stod(item);
+
+        //     cmd->kp = 90;
+        //     cmd->ki = 0;
+        //     cmd->kd = 1.75;
+        // }
+
+        // motor_cmd.header.seq = -1;
+
+        // motor_cmd_pub.publish(motor_cmd);
+
+        // rate.sleep();
+    }
+
+    ROS_INFO("Leg Transform Finished.");
+
+    
     while (ros::ok()){
         ros::spinOnce();
 
         if (trigger){
-            ROS_INFO("Running the csv trajectory ...");
+            ROS_INFO("CSV Trajectory Starts.");
 
             int seq = 0;
             while (ros::ok() && std::getline(csv_file, line)) {
@@ -86,7 +117,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    ROS_INFO("Shutting down the node...");
+    ROS_INFO("CSV Trajectory Finished.");
 
     ros::shutdown();
     

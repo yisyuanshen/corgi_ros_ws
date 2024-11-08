@@ -162,18 +162,23 @@ void grpc_power_state_cb(const power_msg::PowerStateStamped state) {
 
 
 int main(int argc, char **argv) {
-    ROS_INFO_STREAM("corgi ros bridge started");
+    ROS_INFO_STREAM("Corgi ROS Bridge Starts");
 
-    bool debug_mode = ((argc >= 2) && (strcmp(argv[1], "log") == 0));
+    bool debug_mode = false;
+    if (argc >= 2 && argv[1] != nullptr) {
+        if (strcmp(argv[1], "log") == 0) {
+            debug_mode = true;
+        }
+    }
 
     ros::init(argc, argv, "corgi_ros_bridge");
 
     ros::NodeHandle nh;
-    // ros::Publisher ros_clock_pub = nh.advertise<rosgrasph_msgs::Clock>("/clock", 1000);
-    ros::Subscriber ros_motor_cmd_sub = nh.subscribe<corgi_msgs::MotorCmdStamped>("motor/command", 1000, ros_motor_cmd_cb);
-    ros::Subscriber ros_power_cmd_sub = nh.subscribe<corgi_msgs::PowerCmdStamped>("power/command", 1000, ros_power_cmd_cb);
-    ros_motor_state_pub = nh.advertise<corgi_msgs::MotorStateStamped>("motor/state", 1000);
-    ros_power_state_pub = nh.advertise<corgi_msgs::PowerStateStamped>("power/state", 1000);
+    // ros::Publisher ros_clock_pub = nh.advertise<rosgrasph_msgs::Clock>("/clock", 1);
+    ros::Subscriber ros_motor_cmd_sub = nh.subscribe<corgi_msgs::MotorCmdStamped>("motor/command", 1, ros_motor_cmd_cb);
+    ros::Subscriber ros_power_cmd_sub = nh.subscribe<corgi_msgs::PowerCmdStamped>("power/command", 1, ros_power_cmd_cb);
+    ros_motor_state_pub = nh.advertise<corgi_msgs::MotorStateStamped>("motor/state", 1);
+    ros_power_state_pub = nh.advertise<corgi_msgs::PowerStateStamped>("power/state", 1);
 
     core::NodeHandler nh_;
     core::Subscriber<motor_msg::MotorStateStamped> &grpc_motor_state_sub = nh_.subscribe<motor_msg::MotorStateStamped>("motor/state", 1000, grpc_motor_state_cb);
@@ -200,7 +205,7 @@ int main(int argc, char **argv) {
         rate.sleep();
     }
 
-    ROS_INFO("Shutting down the node...");
+    ROS_INFO("Corgi ROS Bridge is killed");
 
     ros::shutdown();
     

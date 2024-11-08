@@ -21,7 +21,6 @@ catkin_package(
 
 catkin_install_python(PROGRAMS
   scripts/corgi_control_panel.py
-  scripts/corgi_debug_panel.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

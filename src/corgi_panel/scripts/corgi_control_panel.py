@@ -2,11 +2,12 @@
 import os
 import sys
 import rospy
-import subprocess
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from corgi_msgs.msg import *
-import paramiko
+import subprocess
+import signal
+
 
 class CorgiControlPanel(QWidget):
     def __init__(self):
@@ -15,7 +16,20 @@ class CorgiControlPanel(QWidget):
         self.init_ros()
         self.reset()
 
+
     def init_ui(self):
+        ### ROS Bridge Button ###
+        self.btn_ros_bridge = QPushButton('Run Bridge', self)
+        btn_bridge_style = '''QPushButton {background-color: white; text-align: center; border-radius: 5px;}
+                              QPushButton:checked {background-color: pink;}
+                              QPushButton:hover:!checked {background-color: silver;}
+                              QPushButton:hover:pressed {background-color: lightcoral; border-style: inset;}'''
+        
+        self.btn_ros_bridge.setStyleSheet(btn_bridge_style)
+        self.btn_ros_bridge.setCheckable(True)
+        self.btn_ros_bridge.clicked.connect(self.ros_bridge_cmd)
+        
+        
         ### Digital Button ###
         self.label_digital = QLabel('Digital:', self)
         self.label_digital.setStyleSheet('color: white; font-weight: bold;')
@@ -28,9 +42,9 @@ class CorgiControlPanel(QWidget):
         
         btn_digital_list = [self.btn_digital_on, self.btn_digital_off]
         btn_digital_style = '''QPushButton {background-color: white; text-align: center; border-radius: 5px;}
-                             QPushButton:checked {background-color: pink;}
-                             QPushButton:hover:!checked {background-color: silver;}
-                             QPushButton:hover:pressed {background-color: lightcoral; border-style: inset;}'''
+                               QPushButton:checked {background-color: pink;}
+                               QPushButton:hover:!checked {background-color: silver;}
+                               QPushButton:hover:pressed {background-color: lightcoral; border-style: inset;}'''
 
         for btn in btn_digital_list:
             btn.setCheckable(True)
@@ -116,7 +130,7 @@ class CorgiControlPanel(QWidget):
         
             
         ### Data Output File Name ###
-        self.label_output = QLabel('Output File Name (.bag):', self)
+        self.label_output = QLabel('Output File Name (.csv):', self)
         self.label_output.setStyleSheet('color: white; font-weight: bold;')
         
         self.edit_output = QLineEdit('', self)
@@ -124,26 +138,26 @@ class CorgiControlPanel(QWidget):
         
         
         ### CSV Control Button ###
-        self.label_input = QLabel('Input File Name (.csv):', self)
-        self.label_input.setStyleSheet('color: white; font-weight: bold;')
+        self.label_csv = QLabel('Input File Name (.csv):', self)
+        self.label_csv.setStyleSheet('color: white; font-weight: bold;')
         
-        self.edit_input = QLineEdit('', self)
-        self.edit_input.setStyleSheet('''background-color: white;''')
+        self.edit_csv = QLineEdit('', self)
+        self.edit_csv.setStyleSheet('''background-color: white;''')
         
-        self.btn_input = QPushButton('Select', self)
-        self.btn_input.setStyleSheet('''QPushButton {background-color: white; color: black; text-align: center; border-radius: 5px;}
-                                        QPushButton:hover:!checked {background-color: silver; color: black;}
-                                        QPushButton:hover:pressed {background-color: gray; border-style: inset;}''')
-        self.btn_input.clicked.connect(self.select_orin_file)
+        self.btn_csv_select = QPushButton('Select', self)
+        self.btn_csv_select.setStyleSheet('''QPushButton {background-color: white; color: black; text-align: center; border-radius: 5px;}
+                                             QPushButton:hover:!checked {background-color: silver; color: black;}
+                                             QPushButton:hover:pressed {background-color: gray; border-style: inset;}''')
+        self.btn_csv_select.clicked.connect(self.select_csv_file)
         
-        self.btn_csv = QPushButton('Run', self)
-        self.btn_csv.setCheckable(True)
-        self.btn_csv.setStyleSheet('''QPushButton {background-color: white; color: black; text-align: center; border-radius: 5px;}
+        self.btn_csv_run = QPushButton('Run', self)
+        self.btn_csv_run.setCheckable(True)
+        self.btn_csv_run.setStyleSheet('''QPushButton {background-color: white; color: black; text-align: center; border-radius: 5px;}
                                       QPushButton:checked {background-color: lightgray; color: black;}
                                       QPushButton:hover:!checked {background-color: lightgray; color: black;}
                                       QPushButton:hover:checked {background-color: silver; color: black;}
                                       QPushButton:hover:pressed {background-color: silver; border-style: inset;}''')
-        self.btn_csv.clicked.connect(self.csv_control_cmd)
+        self.btn_csv_run.clicked.connect(self.csv_control_cmd)
         
         
         ### Trigger Button ###
@@ -169,19 +183,25 @@ class CorgiControlPanel(QWidget):
         self.label_status = QLabel('Status:')
         self.label_status.setStyleSheet('color: white; font-weight: bold;')
         
-        header_status = ['Digital', 'Power', 'Mode',
-                         'LF Motor R', 'LF Motor L', 'RF Motor R', 'RF Motor L',
-                         'RH Motor R', 'RH Motor L', 'LH Motor R', 'LH Motor L',]
-        self.value_status = ['OFF', 'OFF', '-',
-                            '-', '-', '-', '-',
-                            '-', '-', '-', '-']
+        power_status_headers = ['Digital', 'Power', 'Mode']
+        motor_status_headers = ['LF Motor R', 'LF Motor L', 'RF Motor R', 'RF Motor L',
+                                'RH Motor R', 'RH Motor L', 'LH Motor R', 'LH Motor L',]
         
-        self.label_status_headers = [QLabel(header) for header in header_status]
-        self.label_status_values = [QLabel(value) for value in self.value_status]
-        [label.setStyleSheet('color: antiquewhite;') for label in self.label_status_headers]
-        [label.setStyleSheet('color: gold;') for label in self.label_status_values]
-        [label.setFixedWidth(300) for label in self.label_status_values]
-        [label.setAlignment(Qt.AlignCenter) for label in self.label_status_values]
+        self.power_status_values = ['OFF', 'OFF', '-']
+        self.motor_status_values = ['-', '-', '-', '-', '-', '-', '-', '-']
+        
+        self.label_power_status_headers = [QLabel(header) for header in power_status_headers]
+        self.label_motor_status_headers = [QLabel(header) for header in motor_status_headers]
+        self.label_power_status_values = [QLabel(value) for value in self.power_status_values]
+        self.label_motor_status_values = [QLabel(value) for value in self.motor_status_values]
+        
+        label_status_headers = self.label_power_status_headers + self.label_motor_status_headers
+        label_status_values = self.label_power_status_values + self.label_motor_status_values
+        
+        [label.setStyleSheet('color: antiquewhite;') for label in label_status_headers]
+        [label.setStyleSheet('color: gold;') for label in label_status_values]
+        [label.setFixedWidth(300) for label in label_status_values]
+        [label.setAlignment(Qt.AlignCenter) for label in label_status_values]
         
         
         ### Vertical Line ###
@@ -191,36 +211,45 @@ class CorgiControlPanel(QWidget):
             vline.setStyleSheet('background-color: black;')
         
         
+        ### Horizontal Line ###
+        hlines = [QWidget() for i in range(5)]
+        for hline in hlines:
+            hline.setFixedHeight(5)
+            hline.setStyleSheet('background-color: black;')
+        
+        
         ### Arrange Elements ###
         layout = QGridLayout()
         layout.setSpacing(20)
-        layout.addWidget(self.label_digital,   0, 0, 1, 2)
-        layout.addWidget(self.btn_digital_on,  1, 0, 1, 1)
-        layout.addWidget(self.btn_digital_off, 1, 1, 1, 1)
-        layout.addWidget(self.label_power,     2, 0, 1, 2)
-        layout.addWidget(self.btn_power_on,    3, 0, 1, 1)
-        layout.addWidget(self.btn_power_off,   3, 1, 1, 1)
-        layout.addWidget(self.label_mode,      4, 0, 1, 2)
-        layout.addWidget(self.btn_rest_mode,   5, 0, 1, 2)
-        layout.addWidget(self.btn_set_zero,    6, 0, 1, 2)
-        layout.addWidget(self.btn_hall_cal,    7, 0, 1, 2)
-        layout.addWidget(self.btn_motor_mode,  8, 0, 1, 2)
-        layout.addWidget(self.btn_rt_mode,     9, 0, 1, 1)
-        layout.addWidget(self.btn_csv_mode,    9, 1, 1, 1)
+        layout.addWidget(self.btn_ros_bridge,  0, 0, 1, 2)
+        layout.addWidget(self.label_digital,   1, 0, 1, 2)
+        layout.addWidget(self.btn_digital_on,  2, 0, 1, 1)
+        layout.addWidget(self.btn_digital_off, 2, 1, 1, 1)
+        layout.addWidget(self.label_power,     3, 0, 1, 2)
+        layout.addWidget(self.btn_power_on,    4, 0, 1, 1)
+        layout.addWidget(self.btn_power_off,   4, 1, 1, 1)
+        layout.addWidget(self.label_mode,      5, 0, 1, 2)
+        layout.addWidget(self.btn_rest_mode,   6, 0, 1, 2)
+        layout.addWidget(self.btn_set_zero,    7, 0, 1, 2)
+        layout.addWidget(self.btn_hall_cal,    8, 0, 1, 2)
+        layout.addWidget(self.btn_motor_mode,  9, 0, 1, 2)
+        layout.addWidget(self.btn_rt_mode,     10,0, 1, 1)
+        layout.addWidget(self.btn_csv_mode,    10,1, 1, 1)
         layout.addWidget(vlines[0],            0, 2, 12,1)
         layout.addWidget(self.label_output,    0, 3, 1, 2)
         layout.addWidget(self.edit_output,     1, 3, 1, 2)
-        layout.addWidget(self.label_input,     2, 3, 1, 2)
-        layout.addWidget(self.edit_input,      3, 3, 1, 1)
-        layout.addWidget(self.btn_input,       3, 4, 1, 1)
-        layout.addWidget(self.btn_csv,         4, 3, 1, 2)
+        layout.addWidget(self.label_csv,       2, 3, 1, 2)
+        layout.addWidget(self.edit_csv,        3, 3, 1, 1)
+        layout.addWidget(self.btn_csv_select,  3, 4, 1, 1)
+        layout.addWidget(self.btn_csv_run,         4, 3, 1, 2)
         layout.addWidget(self.btn_trigger,     8, 3, 1, 2)
         layout.addWidget(self.btn_reset,       9, 3, 1, 2)
         layout.addWidget(vlines[1],            0, 5, 12,1)
         layout.addWidget(self.label_status,    0, 6, 1, 2)
-        for i in range(len(header_status)):
-            layout.addWidget(self.label_status_headers[i], i+1, 6, 1, 1)
-            layout.addWidget(self.label_status_values[i],  i+1, 7, 1, 1)
+        for i in range(len(label_status_headers)):
+            layout.addWidget(label_status_headers[i], i+1, 6, 1, 1)
+        for i in range(len(label_status_values)):
+            layout.addWidget(label_status_values[i],  i+1, 7, 1, 1)
         
 
         ### General Setting ###
@@ -238,19 +267,56 @@ class CorgiControlPanel(QWidget):
 
     def init_ros(self):
         rospy.init_node('corgi_control_panel')
+        
         self.power_cmd_pub = rospy.Publisher('power/command', PowerCmdStamped, queue_size=10)
         self.trigger_pub = rospy.Publisher('trigger', TriggerStamped, queue_size=10)
         self.sensor_enable_pub = rospy.Publisher('sensor_enable', SensorEnableStamped, queue_size=10)
         
-        self.power_state_sub = rospy.Subscriber('/power/state', PowerStateStamped, self.update_status)        
-    
-        self.ssh_orin = paramiko.SSHClient()
-        self.ssh_orin.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        # self.ssh_orin.connect('192.168.20.174', username='jetson', password='jetson')
+        self.power_state_sub = rospy.Subscriber('power/state', PowerStateStamped, self.update_power_status)
+        self.motor_state_sub = rospy.Subscriber('motor/state', MotorStateStamped, self.update_motor_status)
         
+    
+    def select_csv_file(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, 'Open CSV File', os.path.expanduser('~/corgi_ws/corgi_ros_ws/src/corgi_control_packages/csv_control/input_csv/'), 'CSV Files (*.csv)')
+        
+        if file_path:
+            file_name = os.path.splitext(os.path.basename(file_path))[0]
+            self.edit_csv.setText(file_name)
+        else:
+            self.edit_csv.setText('')
+            
+    
+    def ros_bridge_cmd(self):        
+        if self.btn_ros_bridge.isChecked():
+            self.btn_ros_bridge.setText('Stop Bridge')
+            self.process_bridge = subprocess.Popen(['rosrun', 'corgi_ros_bridge', 'corgi_ros_bridge.sh'])
+        else:
+            self.btn_ros_bridge.setText('Run Bridge')
+            if hasattr(self, 'process_bridge'):
+                self.process_bridge.send_signal(signal.SIGINT)
+                self.process_bridge.wait()
+        
+        self.btn_set_visible()
+        
+    
+    def csv_control_cmd(self):        
+        if self.btn_csv_run.isChecked():
+            self.btn_csv_run.setText('Stop')
+            self.process_csv = subprocess.Popen(['rosrun', 'csv_control', 'csv_control', self.edit_csv.text()])
+
+        else:
+            self.btn_csv_run.setText('Run')
+            if hasattr(self, 'process_csv'):
+                self.process_csv.terminate()
+                self.process_csv.wait()
+        
+        self.btn_set_visible()
+        
+
     def publish_power_cmd(self):
         power_cmd = PowerCmdStamped()
         
+        power_cmd.header.seq = 9999
         power_cmd.header.stamp = rospy.Time.now()
         power_cmd.digital = self.btn_digital_on.isChecked()
         power_cmd.power = self.btn_power_on.isChecked()
@@ -261,25 +327,6 @@ class CorgiControlPanel(QWidget):
         self.btn_set_visible()
         
     
-    def select_orin_file(self):
-        pass
-    
-    def csv_control_cmd(self):
-        self.btn_set_visible()
-        
-        if self.btn_csv.isChecked():
-            self.btn_csv.setText('Stop')
-            command = "source /opt/ros/noetic/setup.bash && source corgi_ws/corgi_ros_ws/devel/setup.bash && nohup rosrun corgi_ros_bridge corgi_ros_bridge"
-            
-        else:
-            self.btn_csv.setText('Run')
-            command = "source /opt/ros/noetic/setup.bash && rosnode kill /corgi_ros_bridge"
-        
-        # stdin, stdout, stderr = self.ssh_orin.exec_command(command)
-        # print("Output:", stdout.read().decode())
-        # print("Error:", stderr.read().decode())
-        
-    
     def publish_trigger_cmd(self):
         trigger_cmd = TriggerStamped()
         
@@ -288,52 +335,60 @@ class CorgiControlPanel(QWidget):
         trigger_cmd.output_filename = self.edit_output.text()
         
         self.trigger_pub.publish(trigger_cmd)
-                
+        
+        self.btn_set_visible()
+        
     
     def btn_set_visible(self):
-        # self.label_mode.setVisible(self.btn_digital_on.isChecked() and self.btn_power_on.isChecked())
+        self.btn_ros_bridge.setVisible(self.btn_digital_off.isChecked() and self.btn_power_off.isChecked())
+        self.btn_digital_on.setVisible(self.btn_ros_bridge.isChecked())
+        self.btn_digital_off.setVisible(self.btn_rest_mode.isChecked())
+        self.btn_power_on.setVisible(self.btn_ros_bridge.isChecked())
+        self.btn_power_off.setVisible(self.btn_rest_mode.isChecked())
         self.btn_rest_mode.setVisible(self.btn_digital_on.isChecked() and self.btn_power_on.isChecked())
-        self.btn_set_zero.setVisible(self.btn_digital_on.isChecked() and self.btn_power_on.isChecked() and not self.btn_motor_mode.isChecked())
-        self.btn_hall_cal.setVisible(self.btn_digital_on.isChecked() and self.btn_power_on.isChecked() and not self.btn_motor_mode.isChecked())
+        self.btn_set_zero.setVisible(self.btn_rest_mode.isVisible() and not self.btn_motor_mode.isChecked())
+        self.btn_hall_cal.setVisible(self.btn_rest_mode.isVisible() and not self.btn_motor_mode.isChecked())
         self.btn_motor_mode.setVisible(not self.btn_rest_mode.isChecked())
+        self.btn_rt_mode.setVisible(self.btn_motor_mode.isChecked() and not self.btn_csv_run.isChecked())
         self.btn_csv_mode.setVisible(self.btn_motor_mode.isChecked())
-        self.btn_rt_mode.setVisible(self.btn_motor_mode.isChecked() and not self.btn_csv.isChecked())
-        self.label_input.setVisible(self.btn_csv_mode.isChecked())
-        self.edit_input.setVisible(self.btn_csv_mode.isChecked())
-        self.btn_input.setVisible(self.btn_csv_mode.isChecked())
-        self.btn_csv.setVisible(self.btn_csv_mode.isChecked())
-    
-    
+        self.label_csv.setVisible(self.btn_csv_mode.isChecked())
+        self.edit_csv.setVisible(self.btn_csv_mode.isChecked())
+        self.btn_csv_select.setVisible(self.btn_csv_mode.isChecked())
+        self.btn_csv_run.setVisible(self.btn_csv_mode.isChecked())
+        
+        
     def reset(self):
         self.btn_digital_off.setChecked(True)
         self.btn_power_off.setChecked(True)
         self.btn_rest_mode.setChecked(True)
         self.btn_rt_mode.setChecked(True)
-        self.btn_csv.setChecked(False)
+        self.btn_csv_run.setChecked(False)
         self.btn_trigger.setChecked(False)
         
         self.csv_control_cmd()
         self.publish_trigger_cmd()
         self.publish_power_cmd()
-        
     
-    def update_status(self, state):
-        self.value_status[0] = 'ON' if state.digital else 'OFF'
-        self.value_status[1] = 'ON' if state.power else 'OFF'
-        self.value_status[2] = ['Rest Mode', 'Set Zero', 'Hall Calibrate', 'Motor Mode'][state.motor_mode]
+    
+    def update_power_status(self, state):
+        self.power_status_values[0] = 'ON' if state.digital else 'OFF'
+        self.power_status_values[1] = 'ON' if state.power else 'OFF'
+        self.power_status_values[2] = ['Rest Mode', 'Set Zero', 'Hall Calibrate', 'Motor Mode'][state.motor_mode]
         
-        for i in range(len(self.value_status)):
-            self.label_status_values[i].setText(self.value_status[i])
+        for i in range(len(self.power_status_values)):
+            self.label_power_status_values[i].setText(self.power_status_values[i])
+    
+
+    def update_motor_status(self, state):
+        return
     
     
     def closeEvent(self, event):
-        
         self.power_state_sub.unregister()
+        self.motor_state_sub.unregister()
         super(CorgiControlPanel, self).closeEvent(event)
                 
         self.reset()
-        
-        self.ssh_orin.close()
         
         
 if __name__ == '__main__':
