@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
     };
 
     if (argc < 2){
-        std::cerr << "Please input csv file path.\n";
+        ROS_INFO("Please input csv file path\n");
         return 1;
     }
     
@@ -44,15 +44,14 @@ int main(int argc, char **argv) {
 
     std::ifstream csv_file(csv_file_path);
     if (!csv_file.is_open()) {
-        ROS_INFO("Failed to open the CSV file.");
-        std::cerr << "Failed to open the csv file.\n";
+        ROS_INFO("Failed to open the CSV file\n");
         return 1;
     }
 
     std::string line;
     
 
-    ROS_INFO("Leg Transform Starts.");
+    ROS_INFO("Leg Transform Starts\n");
     
     for (int i=0; i<5000; i++){
         std::getline(csv_file, line);
@@ -79,14 +78,14 @@ int main(int argc, char **argv) {
         rate.sleep();
     }
 
-    ROS_INFO("Leg Transform Finished.");
+    ROS_INFO("Leg Transform Finished\n");
 
     
     while (ros::ok()){
         ros::spinOnce();
 
         if (trigger){
-            ROS_INFO("CSV Trajectory Starts.");
+            ROS_INFO("CSV Trajectory Starts\n");
 
             int seq = 0;
             while (ros::ok() && std::getline(csv_file, line)) {
@@ -118,7 +117,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    ROS_INFO("CSV Trajectory Finished.");
+    ROS_INFO("CSV Trajectory Finished\n");
 
     ros::shutdown();
     

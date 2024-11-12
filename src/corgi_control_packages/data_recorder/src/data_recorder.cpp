@@ -2,6 +2,8 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <sys/stat.h>
+
 #include "ros/ros.h"
 
 #include "corgi_msgs/MotorCmdStamped.h"
@@ -17,14 +19,34 @@ corgi_msgs::PowerCmdStamped power_cmd;
 corgi_msgs::PowerStateStamped power_state;
 
 std::ofstream output_file;
+std::string output_file_name = "";
 std::string output_file_path = "";
+
+
+bool file_exists(const std::string &filename) {
+    struct stat buffer;
+    return (stat(filename.c_str(), &buffer) == 0);
+}
 
 
 void trigger_cb(const corgi_msgs::TriggerStamped msg){
     trigger = msg.enable;
-
+    
+    output_file_name = msg.output_filename;
+    
     if (trigger && msg.output_filename != "") {
-        output_file_path = std::string(getenv("HOME")) + "/corgi_ws/corgi_ros_ws/src/corgi_control_packages/data_recorder/output_data/" + msg.output_filename + ".csv";
+        output_file_path = std::string(getenv("HOME")) + "/corgi_ws/corgi_ros_ws/src/corgi_control_packages/data_recorder/output_data/" + output_file_name;
+
+        int index = 1;
+        std::string file_path_with_extension = output_file_path + ".csv";
+        while (file_exists(file_path_with_extension)) {
+            file_path_with_extension = output_file_path + "_" + std::to_string(index) + ".csv";
+            index++;
+        }
+        if (index != 1) output_file_name += "_" + std::to_string(index-1);
+        output_file_name += ".csv";
+
+        output_file_path = file_path_with_extension;
 
         if (!output_file.is_open()) {
             output_file.open(output_file_path);
@@ -57,13 +79,13 @@ void trigger_cb(const corgi_msgs::TriggerStamped msg){
                         << "v_10" << "," << "i_10" << ","
                         << "v_11" << "," << "i_11"
                         << "\n";
-            ROS_INFO("Recording data to %s", (msg.output_filename + ".csv").c_str());
+            ROS_INFO("Recording data to %s\n", output_file_name.c_str());
         }
     }
     else {
         if (output_file.is_open()) {
             output_file.close();
-            ROS_INFO("Stopped recording data");
+            ROS_INFO("Stopped recording data\n");
         }
     }
 }
@@ -91,7 +113,7 @@ void power_state_cb(const corgi_msgs::PowerStateStamped state){
 
 void write_data() {
     if (!output_file.is_open()){
-        ROS_INFO("Output file is not opened");
+        if (output_file_name != "") ROS_INFO("Output file is not opened\n");
         return;
     }
 
@@ -128,7 +150,7 @@ void write_data() {
 
 
 int main(int argc, char **argv) {
-    ROS_INFO("Data Recorder Starts");
+    ROS_INFO("Data Recorder Starts\n");
     
     ros::init(argc, argv, "data_recorder");
 

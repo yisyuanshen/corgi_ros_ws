@@ -162,7 +162,7 @@ void grpc_power_state_cb(const power_msg::PowerStateStamped state) {
 
 
 int main(int argc, char **argv) {
-    ROS_INFO_STREAM("Corgi ROS Bridge Starts");
+    ROS_INFO_STREAM("Corgi ROS Bridge Starts\n");
 
     bool debug_mode = false;
     if (argc >= 2 && argv[1] != nullptr) {
