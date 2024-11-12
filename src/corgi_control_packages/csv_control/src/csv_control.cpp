@@ -55,27 +55,28 @@ int main(int argc, char **argv) {
     ROS_INFO("Leg Transform Starts.");
     
     for (int i=0; i<5000; i++){
-        // std::vector<double> columns;
-        // std::stringstream ss(line);
-        // std::string item;
+        std::getline(csv_file, line);
+        std::vector<double> columns;
+        std::stringstream ss(line);
+        std::string item;
         
-        // for (auto& cmd : motor_cmds){
-        //     std::getline(ss, item, ',');
-        //     cmd->theta = std::stod(item);
+        for (auto& cmd : motor_cmds){
+            std::getline(ss, item, ',');
+            cmd->theta = std::stod(item);
 
-        //     std::getline(ss, item, ',');
-        //     cmd->beta = std::stod(item);
+            std::getline(ss, item, ',');
+            cmd->beta = std::stod(item);
 
-        //     cmd->kp = 90;
-        //     cmd->ki = 0;
-        //     cmd->kd = 1.75;
-        // }
+            cmd->kp = 90;
+            cmd->ki = 0;
+            cmd->kd = 1.75;
+        }
 
-        // motor_cmd.header.seq = -1;
+        motor_cmd.header.seq = -1;
 
-        // motor_cmd_pub.publish(motor_cmd);
+        motor_cmd_pub.publish(motor_cmd);
 
-        // rate.sleep();
+        rate.sleep();
     }
 
     ROS_INFO("Leg Transform Finished.");

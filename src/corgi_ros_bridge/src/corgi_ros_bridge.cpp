@@ -77,7 +77,7 @@ void ros_power_cmd_cb(const corgi_msgs::PowerCmdStamped cmd) {
 
     grpc_power_cmd.set_digital(ros_power_cmd.digital);
     grpc_power_cmd.set_power(ros_power_cmd.power);
-    grpc_power_cmd.set_motor_mode((power_msg::MOTORMODE)ros_power_cmd.motor_mode);
+    grpc_power_cmd.set_robot_mode((power_msg::ROBOTMODE)ros_power_cmd.robot_mode);
 
     grpc_power_cmd.mutable_header()->set_seq(ros_power_cmd.header.seq);
     grpc_power_cmd.mutable_header()->mutable_stamp()->set_sec(ros_power_cmd.header.stamp.sec);
@@ -126,7 +126,7 @@ void grpc_power_state_cb(const power_msg::PowerStateStamped state) {
 
     ros_power_state.digital = grpc_power_state.digital();
     ros_power_state.power = grpc_power_state.power();
-    ros_power_state.motor_mode = grpc_power_state.motor_mode();
+    ros_power_state.robot_mode = grpc_power_state.robot_mode();
 
     ros_power_state.v_0 = grpc_power_state.v_0();
     ros_power_state.i_0 = grpc_power_state.i_0();

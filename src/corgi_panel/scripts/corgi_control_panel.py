@@ -320,7 +320,7 @@ class CorgiControlPanel(QWidget):
         power_cmd.header.stamp = rospy.Time.now()
         power_cmd.digital = self.btn_digital_on.isChecked()
         power_cmd.power = self.btn_power_on.isChecked()
-        power_cmd.motor_mode = self.btn_group_mode.checkedId()
+        power_cmd.robot_mode = self.btn_group_mode.checkedId()
         
         self.power_cmd_pub.publish(power_cmd)
         
@@ -373,7 +373,7 @@ class CorgiControlPanel(QWidget):
     def update_power_status(self, state):
         self.power_status_values[0] = 'ON' if state.digital else 'OFF'
         self.power_status_values[1] = 'ON' if state.power else 'OFF'
-        self.power_status_values[2] = ['Rest Mode', 'Set Zero', 'Hall Calibrate', 'Motor Mode'][state.motor_mode]
+        self.power_status_values[2] = ['Rest Mode', 'Set Zero', 'Hall Calibrate', 'Motor Mode'][state.robot_mode]
         
         for i in range(len(self.power_status_values)):
             self.label_power_status_values[i].setText(self.power_status_values[i])
@@ -387,9 +387,10 @@ class CorgiControlPanel(QWidget):
         self.power_state_sub.unregister()
         self.motor_state_sub.unregister()
         super(CorgiControlPanel, self).closeEvent(event)
-                
-        self.reset()
         
+        self.reset()
+        self.btn_ros_bridge.setChecked(False)
+        self.ros_bridge_cmd()
         
 if __name__ == '__main__':
     app = QApplication(sys.argv)

@@ -33,6 +33,11 @@ void motor_cmd_cb(const motor_msg::MotorCmdStamped cmd) {
         &cmd.module_d()
     };
 
+    std::cout << "TB_A: (" << motor_cmds[0]->theta() << ", " << motor_cmds[0]->beta() << "); " << std::endl
+              << "TB_B: (" << motor_cmds[1]->theta() << ", " << motor_cmds[1]->beta() << "); " << std::endl
+              << "TB_C: (" << motor_cmds[2]->theta() << ", " << motor_cmds[2]->beta() << "); " << std::endl
+              << "TB_D: (" << motor_cmds[3]->theta() << ", " << motor_cmds[3]->beta() << "); " << std::endl << std::endl;
+
     for (int i = 0; i < 4; i++) {
         motor_states[i]->set_theta(motor_cmds[i]->theta());
         motor_states[i]->set_beta(motor_cmds[i]->beta());
@@ -52,8 +57,7 @@ void power_cmd_cb(const power_msg::PowerCmdStamped cmd) {
 
     power_state.set_digital(cmd.digital());
     power_state.set_power(cmd.power());
-    // std::cout << cmd.motor_mode() << std::endl;
-    power_state.set_motor_mode((power_msg::MOTORMODE)cmd.motor_mode());
+    power_state.set_robot_mode((power_msg::ROBOTMODE)cmd.robot_mode());
 
 
     timeval currentTime;
@@ -79,7 +83,6 @@ int main(int argc, char **argv) {
 
         {
             std::lock_guard<std::mutex> lock(mutex_motor_state);
-            motor_state.mutable_header()->set_seq(1);
             motor_state_pub.publish(motor_state);
         }
 

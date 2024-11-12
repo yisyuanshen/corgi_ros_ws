@@ -1,21 +1,6 @@
 # corgi_ros_ws
-```
-corgi_ros_ws:
-|-src
-| |-corgi_control_packages
-| | |-csv_control
-| | |-(other packages) ...
-| |
-| |-corgi_msgs
-| | |-msg
-| |
-| |-corgi_panel
-| |
-| |-corgi_ros_bridge
-| |
-| |-corgi_sensors
-| |
-```
+
+grpc_core: https://github.com/kyle1548/grpc_core.git
 
 ```
 catkin build -DLOCAL_PACKAGE_PATH=$HOME/corgi_ws/install
@@ -23,5 +8,5 @@ catkin build -DLOCAL_PACKAGE_PATH=$HOME/corgi_ws/install
 
 ```
 source devel/setup.bash
-roslaunch corgi_ros_bridge corgi_ros_bridge
+roslaunch corgi_panel corgi_control_panel
 ```

@@ -1,4 +1,4 @@
 Headers header
 bool digital
 bool power
-int32 motor_mode
+int32 robot_mode

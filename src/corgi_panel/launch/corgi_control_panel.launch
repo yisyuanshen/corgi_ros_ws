@@ -1,3 +1,4 @@
 <launch>
     <node name="corgi_control_panel" pkg="corgi_panel" type="corgi_control_panel.py" output="screen" />
+    <node name="data_recorder" pkg="data_recorder" type="data_recorder" output="screen" />
 </launch>
