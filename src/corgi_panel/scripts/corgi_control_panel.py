@@ -21,7 +21,7 @@ class CorgiControlPanel(QWidget):
         ### ROS Bridge Button ###
         self.btn_ros_bridge = QPushButton('Run Bridge', self)
         btn_bridge_style = '''QPushButton {background-color: white; text-align: center; border-radius: 5px;}
-                              QPushButton:checked {background-color: lightgray; color: black;}
+                              QPushButton:checked {background-color: lavender; color: black;}
                               QPushButton:hover:!checked {background-color: silver;}
                               QPushButton:hover:pressed {background-color: gray; border-style: inset;}
                               QPushButton:disabled {background-color: lightgray; color: gray;}'''
@@ -293,13 +293,38 @@ class CorgiControlPanel(QWidget):
     
     
     def select_csv_file(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, 'Open CSV File', os.path.expanduser('~/corgi_ws/corgi_ros_ws/src/corgi_control_packages/csv_control/input_csv/'), 'CSV Files (*.csv)')
-        
-        if file_path:
+        dialog = QFileDialog(self)
+        dialog.setWindowTitle("Select Your CSV File")
+        dialog.setNameFilter("CSV Files (*.csv)")
+        dialog.setFileMode(QFileDialog.ExistingFile)
+        dialog.setOption(QFileDialog.DontUseNativeDialog, False)
+        dialog.setStyleSheet("""
+            QDialog {
+                background-color: #f0f0f0;
+                font-family: Arial;
+                font-size: 14px;
+            }
+            QLabel {
+                color: #333;
+            }
+            QPushButton {
+                background-color: #5cb85c;
+                color: white;
+                padding: 5px;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #4cae4c;
+            }
+        """)
+
+        if dialog.exec_() == QFileDialog.Accepted:
+            file_path = dialog.selectedFiles()[0]
             file_name = os.path.splitext(os.path.basename(file_path))[0]
             self.edit_csv.setText(file_name)
         else:
             self.edit_csv.setText('')
+
             
     
     def ros_bridge_cmd(self):        
