@@ -293,39 +293,19 @@ class CorgiControlPanel(QWidget):
     
     
     def select_csv_file(self):
-        dialog = QFileDialog(self)
-        dialog.setWindowTitle("Select Your CSV File")
-        dialog.setNameFilter("CSV Files (*.csv)")
-        dialog.setFileMode(QFileDialog.ExistingFile)
-        dialog.setOption(QFileDialog.DontUseNativeDialog, False)
-        dialog.setStyleSheet("""
-            QDialog {
-                background-color: #f0f0f0;
-                font-family: Arial;
-                font-size: 14px;
-            }
-            QLabel {
-                color: #333;
-            }
-            QPushButton {
-                background-color: #5cb85c;
-                color: white;
-                padding: 5px;
-                border-radius: 5px;
-            }
-            QPushButton:hover {
-                background-color: #4cae4c;
-            }
-        """)
+        file_dialog = QFileDialog(self)
+        file_dialog.setWindowTitle('Open CSV File')
+        file_dialog.setNameFilter('CSV Files (*.csv)')
+        file_dialog.setDirectory(os.path.expanduser('~/corgi_ws/corgi_ros_ws/src/corgi_control_packages/csv_control/input_csv/'))
+        file_dialog.setStyleSheet('''background-color: white; font-family: Ubuntu; font-size: 24px; padding: 3px''')
 
-        if dialog.exec_() == QFileDialog.Accepted:
-            file_path = dialog.selectedFiles()[0]
+        if file_dialog.exec() == QFileDialog.Accepted:
+            file_path = file_dialog.selectedFiles()[0]
             file_name = os.path.splitext(os.path.basename(file_path))[0]
             self.edit_csv.setText(file_name)
         else:
             self.edit_csv.setText('')
 
-            
     
     def ros_bridge_cmd(self):        
         if self.btn_ros_bridge.isChecked():
