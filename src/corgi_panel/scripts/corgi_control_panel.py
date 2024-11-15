@@ -8,10 +8,21 @@ from corgi_msgs.msg import *
 import subprocess
 import signal
 
+GPIO_defined = True
+try: import Jetson.GPIO as GPIO 
+except: GPIO_defined = False
+
 
 class CorgiControlPanel(QWidget):
     def __init__(self):
         super(CorgiControlPanel, self).__init__()
+        
+        if GPIO_defined:
+            self.trigger_pin = 16
+            GPIO.setmode(GPIO.BOARD)
+            GPIO.setup(self.trigger_pin, GPIO.OUT)
+            GPIO.output(self.trigger_pin, GPIO.LOW)
+        
         self.init_ui()
         self.init_ros()
         self.reset()
@@ -356,6 +367,8 @@ class CorgiControlPanel(QWidget):
         trigger_cmd.output_filename = self.edit_output.text()
         
         self.trigger_pub.publish(trigger_cmd)
+        
+        if GPIO_defined: GPIO.output(self.trigger_pin, GPIO.HIGH if self.btn_trigger.isChecked() else GPIO.LOW)
         
         self.set_btn_enable()
         
