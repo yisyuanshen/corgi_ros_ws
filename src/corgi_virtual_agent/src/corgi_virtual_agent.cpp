@@ -41,8 +41,10 @@ void motor_cmd_cb(const motor_msg::MotorCmdStamped cmd) {
     for (int i = 0; i < 4; i++) {
         motor_states[i]->set_theta(motor_cmds[i]->theta());
         motor_states[i]->set_beta(motor_cmds[i]->beta());
-        motor_states[i]->set_current_r(1);
-        motor_states[i]->set_current_l(1);
+        motor_states[i]->set_velocity_r(1);
+        motor_states[i]->set_velocity_l(1);
+        motor_states[i]->set_torque_r(1);
+        motor_states[i]->set_torque_l(1);
     }
 
     timeval currentTime;
@@ -56,6 +58,7 @@ void power_cmd_cb(const power_msg::PowerCmdStamped cmd) {
     std::lock_guard<std::mutex> lock(mutex_power_state);
 
     power_state.set_digital(cmd.digital());
+    power_state.set_signal(cmd.signal());
     power_state.set_power(cmd.power());
     power_state.set_robot_mode((power_msg::ROBOTMODE)cmd.robot_mode());
 

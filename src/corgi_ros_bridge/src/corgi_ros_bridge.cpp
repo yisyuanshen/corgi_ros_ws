@@ -13,6 +13,7 @@
 #include "corgi_msgs/MotorStateStamped.h"
 #include "corgi_msgs/PowerCmdStamped.h"
 #include "corgi_msgs/PowerStateStamped.h"
+#include "corgi_msgs/TriggerStamped.h"
 
 
 std::mutex mutex_ros_motor_state;
@@ -35,6 +36,12 @@ ros::Publisher ros_power_state_pub;
 core::Publisher<motor_msg::MotorCmdStamped> *grpc_motor_cmd_pub;
 core::Publisher<power_msg::PowerCmdStamped> *grpc_power_cmd_pub;
 
+bool ros_trigger = false;
+
+
+void ros_trigger_cb(const corgi_msgs::TriggerStamped trigger){
+    ros_trigger = trigger.enable;
+}
 
 void ros_motor_cmd_cb(const corgi_msgs::MotorCmdStamped cmd) {
     std::lock_guard<std::mutex> lock(mutex_grpc_motor_cmd);
@@ -61,6 +68,8 @@ void ros_motor_cmd_cb(const corgi_msgs::MotorCmdStamped cmd) {
         grpc_motor_modules[i]->set_kp(ros_motor_modules[i].kp);
         grpc_motor_modules[i]->set_ki(ros_motor_modules[i].ki);
         grpc_motor_modules[i]->set_kd(ros_motor_modules[i].kd);
+        grpc_motor_modules[i]->set_torque_r(ros_motor_modules[i].torque_r);
+        grpc_motor_modules[i]->set_torque_l(ros_motor_modules[i].torque_l);
     }
 
     grpc_motor_cmd.mutable_header()->set_seq(ros_motor_cmd.header.seq);
@@ -76,7 +85,10 @@ void ros_power_cmd_cb(const corgi_msgs::PowerCmdStamped cmd) {
     ros_power_cmd = cmd;
 
     grpc_power_cmd.set_digital(ros_power_cmd.digital);
+    grpc_power_cmd.set_signal(ros_power_cmd.signal);
     grpc_power_cmd.set_power(ros_power_cmd.power);
+    grpc_power_cmd.set_clean(false);
+    grpc_power_cmd.set_trigger(ros_trigger);
     grpc_power_cmd.set_robot_mode((power_msg::ROBOTMODE)ros_power_cmd.robot_mode);
 
     grpc_power_cmd.mutable_header()->set_seq(ros_power_cmd.header.seq);
@@ -108,8 +120,10 @@ void grpc_motor_state_cb(const motor_msg::MotorStateStamped state) {
     for (int i = 0; i < 4; i++) {
         ros_motor_modules[i]->theta = grpc_motor_modules[i]->theta();
         ros_motor_modules[i]->beta = grpc_motor_modules[i]->beta();
-        ros_motor_modules[i]->current_r = grpc_motor_modules[i]->current_r();
-        ros_motor_modules[i]->current_l = grpc_motor_modules[i]->current_l();
+        ros_motor_modules[i]->velocity_r = grpc_motor_modules[i]->velocity_r();
+        ros_motor_modules[i]->velocity_l = grpc_motor_modules[i]->velocity_l();
+        ros_motor_modules[i]->torque_r = grpc_motor_modules[i]->torque_r();
+        ros_motor_modules[i]->torque_l = grpc_motor_modules[i]->torque_l();
     }
 
     ros_motor_state.header.seq = grpc_motor_state.header().seq();
@@ -125,7 +139,9 @@ void grpc_power_state_cb(const power_msg::PowerStateStamped state) {
     grpc_power_state = state;
 
     ros_power_state.digital = grpc_power_state.digital();
+    ros_power_state.signal = grpc_power_state.signal();
     ros_power_state.power = grpc_power_state.power();
+    ros_power_state.clean = grpc_power_state.clean();
     ros_power_state.robot_mode = grpc_power_state.robot_mode();
 
     ros_power_state.v_0 = grpc_power_state.v_0();
@@ -174,9 +190,9 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "corgi_ros_bridge");
 
     ros::NodeHandle nh;
-    // ros::Publisher ros_clock_pub = nh.advertise<rosgrasph_msgs::Clock>("/clock", 1);
     ros::Subscriber ros_motor_cmd_sub = nh.subscribe<corgi_msgs::MotorCmdStamped>("motor/command", 1, ros_motor_cmd_cb);
     ros::Subscriber ros_power_cmd_sub = nh.subscribe<corgi_msgs::PowerCmdStamped>("power/command", 1, ros_power_cmd_cb);
+    ros::Subscriber ros_trigger_sub = nh.subscribe<corgi_msgs::TriggerStamped>("trigger", 1, ros_trigger_cb);
     ros_motor_state_pub = nh.advertise<corgi_msgs::MotorStateStamped>("motor/state", 1);
     ros_power_state_pub = nh.advertise<corgi_msgs::PowerStateStamped>("power/state", 1);
 
@@ -191,10 +207,6 @@ int main(int argc, char **argv) {
     int loop_counter = 0;
     while (ros::ok()) {
         if (debug_mode) ROS_INFO_STREAM("Loop Count: " << loop_counter);
-
-        // rosgraph_msgs::Clock clock_msg;
-        // clock_msg.clock.fromSec(loop_counter * 0.001);
-        // ros_clock_pub.publish(clock_msg);
 
         ros::spinOnce();
         core::spinOnce();
