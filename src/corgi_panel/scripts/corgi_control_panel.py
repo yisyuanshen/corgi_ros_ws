@@ -128,11 +128,13 @@ class CorgiControlPanel(QWidget):
         self.btn_group_mode.setExclusive(True)
         
         self.btn_rest_mode  = QPushButton('Rest Mode', self)
+        self.btn_config     = QPushButton('Config Mode', self)
+        self.btn_config.setVisible(False)
         self.btn_set_zero   = QPushButton('Set Zero', self)
         self.btn_hall_cal   = QPushButton('Hall Calibrate', self)
         self.btn_motor_mode = QPushButton('Motor Mode', self)
         
-        btn_mode_list = [self.btn_rest_mode, self.btn_set_zero, self.btn_hall_cal, self.btn_motor_mode]
+        btn_mode_list = [self.btn_rest_mode, self.btn_config, self.btn_set_zero, self.btn_hall_cal, self.btn_motor_mode]
         btn_mode_style = '''QPushButton {background-color: white; color: black; text-align: center; border-radius: 5px;}
                             QPushButton:checked {background-color: palegreen; color: black;}
                             QPushButton:hover:!checked {background-color: silver; color: black;}
@@ -454,7 +456,7 @@ class CorgiControlPanel(QWidget):
         self.power_status_values[0] = 'ON' if self.power_state.digital else 'OFF'
         self.power_status_values[1] = 'ON' if self.power_state.signal else 'OFF'
         self.power_status_values[2] = 'ON' if self.power_state.power else 'OFF'
-        self.power_status_values[3] = ['Rest Mode', 'Set Zero', 'Hall Calibrate', 'Motor Mode', 'Config Mode'][self.power_state.robot_mode]
+        self.power_status_values[3] = ['Rest Mode', 'Config Mode', 'Set Zero', 'Hall Calibrate', 'Motor Mode', 'Control Mode'][self.power_state.robot_mode]
         
         for i in range(len(self.power_status_values)):
             self.label_power_status_values[i].setText(self.power_status_values[i])
