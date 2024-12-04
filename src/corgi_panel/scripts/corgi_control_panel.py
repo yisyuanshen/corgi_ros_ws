@@ -417,7 +417,7 @@ class CorgiControlPanel(QWidget):
         self.btn_rest_mode.setEnabled(not self.btn_csv_run.isChecked())
         self.btn_set_zero.setEnabled(self.btn_digital_on.isChecked() and self.btn_power_on.isChecked() and not self.btn_motor_mode.isChecked())
         self.btn_hall_cal.setEnabled(self.btn_digital_on.isChecked() and self.btn_power_on.isChecked() and not self.btn_motor_mode.isChecked())
-        self.btn_motor_mode.setEnabled(self.power_state.robot_mode in [1, 3])
+        self.btn_motor_mode.setEnabled(self.power_state.robot_mode in [2, 4, 5])
         self.btn_rt_mode.setEnabled(self.btn_motor_mode.isChecked() and not self.btn_csv_run.isChecked())
         self.btn_csv_mode.setEnabled(self.btn_motor_mode.isChecked())
         self.label_csv.setEnabled(self.btn_motor_mode.isChecked() and self.btn_csv_mode.isChecked())
