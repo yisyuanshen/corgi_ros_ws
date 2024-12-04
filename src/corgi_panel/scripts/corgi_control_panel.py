@@ -7,6 +7,7 @@ from PyQt5.QtCore import *
 from corgi_msgs.msg import *
 import subprocess
 import signal
+import numpy as np
 
 GPIO_defined = True
 try: import Jetson.GPIO as GPIO 
@@ -324,6 +325,7 @@ class CorgiControlPanel(QWidget):
         rospy.init_node('corgi_control_panel')
         
         self.power_cmd_pub = rospy.Publisher('power/command', PowerCmdStamped, queue_size=10)
+        self.motor_cmd_pub = rospy.Publisher('motor/command', MotorCmdStamped, queue_size=10)
         self.trigger_pub = rospy.Publisher('trigger', TriggerStamped, queue_size=10)
         self.sensor_enable_pub = rospy.Publisher('sensor_enable', SensorEnableStamped, queue_size=10)
         
@@ -388,6 +390,26 @@ class CorgiControlPanel(QWidget):
         power_cmd.robot_mode = self.btn_group_mode.checkedId()
         
         self.power_cmd_pub.publish(power_cmd)
+        
+        if self.sender() == self.btn_set_zero: self.publish_motor_zero_cmd()
+        
+        self.set_btn_enable()
+        
+
+    def publish_motor_zero_cmd(self):
+        motor_cmd = MotorCmdStamped()
+        
+        motor_cmd.header.seq = 9999
+        motor_cmd.header.stamp = rospy.Time.now()
+        
+        for cmd in [motor_cmd.module_a, motor_cmd.module_b, motor_cmd.module_c, motor_cmd.module_d]:
+            cmd.theta = np.deg2rad(17)
+            cmd.beta = 0
+            cmd.kp = 0
+            cmd.ki = 0
+            cmd.kd = 0
+            
+        self.motor_cmd_pub.publish(motor_cmd)
         
         self.set_btn_enable()
         

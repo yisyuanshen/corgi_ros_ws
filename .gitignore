@@ -3,3 +3,4 @@ devel
 logs
 .vscode
 .catkin_tools
+*TEST*
