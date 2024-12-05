@@ -391,7 +391,7 @@ class CorgiControlPanel(QWidget):
         
         self.power_cmd_pub.publish(power_cmd)
         
-        if self.sender() == self.btn_set_zero: self.publish_motor_zero_cmd()
+        if (self.sender() != self.btn_motor_mode): self.publish_motor_zero_cmd()
         
         self.set_btn_enable()
         
@@ -483,6 +483,8 @@ class CorgiControlPanel(QWidget):
         for i in range(len(self.power_status_values)):
             self.label_power_status_values[i].setText(self.power_status_values[i])
 
+        if self.btn_hall_cal.isChecked() and self.power_state.robot_mode == 4: self.btn_motor_mode.setChecked(True)
+        
         self.set_btn_enable()
         
 
@@ -492,7 +494,7 @@ class CorgiControlPanel(QWidget):
 
     
     def timer_update(self):
-         if hasattr(self, 'process_csv') and self.process_csv.poll() is not None:
+        if hasattr(self, 'process_csv') and self.process_csv.poll() is not None:
             self.btn_csv_run.setChecked(False)
             self.csv_control_cmd()
         
