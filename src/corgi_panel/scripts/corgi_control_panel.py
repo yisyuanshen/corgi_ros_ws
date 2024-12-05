@@ -483,7 +483,9 @@ class CorgiControlPanel(QWidget):
         for i in range(len(self.power_status_values)):
             self.label_power_status_values[i].setText(self.power_status_values[i])
 
-        if self.btn_hall_cal.isChecked() and self.power_state.robot_mode == 4: self.btn_motor_mode.setChecked(True)
+        if self.btn_hall_cal.isChecked() and self.power_state.robot_mode == 4:
+            self.btn_motor_mode.setEnabled(True)
+            self.btn_motor_mode.setChecked(True)
         
         self.set_btn_enable()
         
