@@ -391,12 +391,13 @@ class CorgiControlPanel(QWidget):
         
         self.power_cmd_pub.publish(power_cmd)
         
-        if (self.sender() != self.btn_motor_mode): self.publish_motor_zero_cmd()
+        if self.sender() != self.btn_motor_mode: self.publish_motor_cmd(kp=0, ki=0, kd=0)
+        elif self.power_state.robot_mode != 4: self.publish_motor_cmd(kp=90, ki=0, kd=1.75)
         
         self.set_btn_enable()
         
 
-    def publish_motor_zero_cmd(self):
+    def publish_motor_zero_cmd(self, kp, ki, kd):
         motor_cmd = MotorCmdStamped()
         
         motor_cmd.header.seq = 9999
@@ -405,9 +406,9 @@ class CorgiControlPanel(QWidget):
         for cmd in [motor_cmd.module_a, motor_cmd.module_b, motor_cmd.module_c, motor_cmd.module_d]:
             cmd.theta = np.deg2rad(17)
             cmd.beta = 0
-            cmd.kp = 0
-            cmd.ki = 0
-            cmd.kd = 0
+            cmd.kp = kp
+            cmd.ki = ki
+            cmd.kd = kd
             
         self.motor_cmd_pub.publish(motor_cmd)
         
