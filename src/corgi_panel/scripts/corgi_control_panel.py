@@ -391,8 +391,8 @@ class CorgiControlPanel(QWidget):
         
         self.power_cmd_pub.publish(power_cmd)
         
-        if self.sender() != self.btn_motor_mode: self.publish_motor_cmd(kp=0, ki=0, kd=0)
-        elif self.power_state.robot_mode != 4: self.publish_motor_cmd(kp=90, ki=0, kd=1.75)
+        if self.sender() != self.btn_motor_mode: self.publish_motor_zero_cmd(kp=0, ki=0, kd=0)
+        elif self.power_state.robot_mode != 4: self.publish_motor_zero_cmd(kp=90, ki=0, kd=1.75)
         
         self.set_btn_enable()
         
