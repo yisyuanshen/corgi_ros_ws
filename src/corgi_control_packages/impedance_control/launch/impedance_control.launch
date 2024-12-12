@@ -1,0 +1,3 @@
+<launch>
+    <node name="force_estimation" pkg="impednance_control" type="force_estimation" output="screen" />
+</launch>

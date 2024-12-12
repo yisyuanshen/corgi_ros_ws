@@ -82,6 +82,8 @@ Eigen::MatrixXd estimate_force(double theta, double beta, double torque_r, doubl
         
         Eigen::MatrixXd torque(2, 1);
         torque << torque_r, torque_l;
+        // std::cout << jacobian.inverse().transpose() << std::endl;
+        // std::cout << torque << std::endl;
 
         Eigen::MatrixXd force_est = jacobian.inverse().transpose() * torque;
 
@@ -97,6 +99,7 @@ int main(int argc, char **argv) {
 
     ros::NodeHandle nh;
     ros::Subscriber motor_state_sub = nh.subscribe<corgi_msgs::MotorStateStamped>("motor/state", 1000, motor_state_cb);
+    ros::Publisher force_state_pub = nh.advertise<corgi_msgs::ForceStateStamped>("force/state", 1000);
     ros::Rate rate(1000);
 
 
@@ -107,17 +110,32 @@ int main(int argc, char **argv) {
         &motor_state.module_d
     };
 
+    std::vector<corgi_msgs::ForceState*> force_states = {
+        &force_state.module_a,
+        &force_state.module_b,
+        &force_state.module_c,
+        &force_state.module_d
+    };
+
 
     while (ros::ok()) {
         ros::spinOnce();
 
-        printf("\n\nSeq = %d\n", motor_state.header.seq);
-        for (auto & state : motor_states){
-            Eigen::MatrixXd force_est = estimate_force(state->theta, state->beta, state->torque_r, state->torque_l);
+        // printf("\n\nSeq = %d\n", motor_state.header.seq);
+        for (int i=0; i<4; i++){
+            Eigen::MatrixXd force_est = estimate_force(motor_states[i]->theta, motor_states[i]->beta, motor_states[i]->torque_r, motor_states[i]->torque_l);
 
-            printf("TB = [%.4lf, %.4lf]\n", state->theta, state->beta);
-            printf("Force_est = [%.4lf, %.4lf]\n", force_est(0, 0), force_est(1, 0));
+            force_states[i]->fx = force_est(0, 0);
+            force_states[i]->fy = force_est(1, 0);
+
+            // printf("TB = [%.4lf, %.4lf]\n", state->theta, state->beta);
+            // printf("Force_est = [%.4lf, %.4lf]\n", force_est(0, 0), force_est(1, 0));
         }
+
+        force_state.header.seq = motor_state.header.seq;
+        force_state.header.stamp = ros::Time::now();
+        
+        force_state_pub.publish(force_state);
 
         rate.sleep();
     }

@@ -27,12 +27,12 @@ int main(int argc, char **argv) {
         ros::spinOnce();
         
         for (auto& state : motor_states){
-            state->theta = 30/180.0*M_PI;
+            state->theta = 17/180.0*M_PI;
             state->beta = 0;
             state->velocity_r = 0;
             state->velocity_l = 0;
-            state->torque_r = -1;
-            state->torque_l = 1;
+            state->torque_r = -2.265;
+            state->torque_l = 2.265;
         }
 
         motor_state.header.seq = -1;

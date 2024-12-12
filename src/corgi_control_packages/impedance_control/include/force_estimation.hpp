@@ -9,9 +9,11 @@
 
 #include "ros/ros.h"
 #include "corgi_msgs/MotorStateStamped.h"
+#include "corgi_msgs/ForceStateStamped.h"
 
 
 corgi_msgs::MotorStateStamped motor_state;
+corgi_msgs::ForceStateStamped force_state;
 
 Eigen::MatrixXd H_l_poly(2, 8);
 Eigen::MatrixXd U_l_poly(2, 8);
@@ -26,4 +28,5 @@ Eigen::MatrixXd P_poly(2, 8);
 void motor_state_cb(const corgi_msgs::MotorStateStamped state);
 Eigen::MatrixXd calculate_P_poly(int rim, double alpha);
 Eigen::MatrixXd calculate_jacobian(Eigen::MatrixXd P_theta, Eigen::MatrixXd P_theta_deriv, double beta);
+Eigen::MatrixXd estimate_force(double theta, double beta, double torque_r, double torque_l);
 #endif
