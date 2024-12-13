@@ -126,7 +126,7 @@ int main(int argc, char **argv) {
             Eigen::MatrixXd force_est = estimate_force(motor_states[i]->theta, motor_states[i]->beta, motor_states[i]->torque_r, motor_states[i]->torque_l);
 
             force_states[i]->fx = force_est(0, 0);
-            force_states[i]->fy = force_est(1, 0);
+            force_states[i]->fz = force_est(1, 0);
 
             // printf("TB = [%.4lf, %.4lf]\n", state->theta, state->beta);
             // printf("Force_est = [%.4lf, %.4lf]\n", force_est(0, 0), force_est(1, 0));

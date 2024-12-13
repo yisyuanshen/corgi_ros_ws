@@ -1,12 +1,12 @@
 #include <iostream>
 #include "ros/ros.h"
+#include "rosgraph_msgs/Clock.h"
 #include "corgi_sim/set_int.h"
 #include "corgi_sim/set_float.h"
 #include "corgi_sim/Float64Stamped.h"
 #include "corgi_msgs/MotorCmdStamped.h"
 #include "corgi_msgs/MotorStateStamped.h"
 #include "corgi_msgs/TriggerStamped.h"
-
 
 corgi_msgs::MotorCmdStamped motor_cmd;
 corgi_msgs::MotorStateStamped motor_state;
@@ -29,6 +29,10 @@ corgi_sim::set_float CR_motor_srv;
 corgi_sim::set_float CL_motor_srv;
 corgi_sim::set_float DR_motor_srv;
 corgi_sim::set_float DL_motor_srv;
+
+corgi_sim::set_int time_step_srv;
+
+rosgraph_msgs::Clock simulationClock;
 
 void motor_cmd_cb(const corgi_msgs::MotorCmdStamped cmd) {motor_cmd = cmd;}
 
@@ -69,29 +73,13 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "corgi_sim");
 
     ros::NodeHandle nh;
+
+    ros::Publisher clock_pub = nh.advertise<rosgraph_msgs::Clock>("/clock", 1);
+    
     ros::service::waitForService("/robot/time_step");
     ros::spinOnce();
 
-    corgi_sim::set_int sensor_enable_srv;
-    sensor_enable_srv.request.value = 1;
-    
-    ros::service::call("lf_right_motor_sensor/enable", sensor_enable_srv);
-    ros::service::call("lf_left_motor_sensor/enable", sensor_enable_srv);
-    ros::service::call("rf_right_motor_sensor/enable", sensor_enable_srv);
-    ros::service::call("rf_left_motor_sensor/enable", sensor_enable_srv);
-    ros::service::call("rh_right_motor_sensor/enable", sensor_enable_srv);
-    ros::service::call("rh_left_motor_sensor/enable", sensor_enable_srv);
-    ros::service::call("lh_right_motor_sensor/enable", sensor_enable_srv);
-    ros::service::call("lh_left_motor_sensor/enable", sensor_enable_srv);
-
-    ros::service::call("lf_right_motor/torque_feedback_sensor/enable", sensor_enable_srv);
-    ros::service::call("lf_left_motor/torque_feedback_sensor/enable", sensor_enable_srv);
-    ros::service::call("rf_right_motor/torque_feedback_sensor/enable", sensor_enable_srv);
-    ros::service::call("rf_left_motor/torque_feedback_sensor/enable", sensor_enable_srv);
-    ros::service::call("rh_right_motor/torque_feedback_sensor/enable", sensor_enable_srv);
-    ros::service::call("rh_left_motor/torque_feedback_sensor/enable", sensor_enable_srv);
-    ros::service::call("lh_right_motor/torque_feedback_sensor/enable", sensor_enable_srv);
-    ros::service::call("lh_left_motor/torque_feedback_sensor/enable", sensor_enable_srv);
+    ros::ServiceClient time_step_client = nh.serviceClient<corgi_sim::set_int>("robot/time_step");
 
     ros::ServiceClient AR_motor_client = nh.serviceClient<corgi_sim::set_float>("lf_right_motor/set_position");
     ros::ServiceClient AL_motor_client = nh.serviceClient<corgi_sim::set_float>("lf_left_motor/set_position");
@@ -124,12 +112,13 @@ int main(int argc, char **argv) {
     ros::Publisher motor_state_pub = nh.advertise<corgi_msgs::MotorStateStamped>("motor/state", 1000);
     ros::Publisher trigger_pub = nh.advertise<corgi_msgs::TriggerStamped>("trigger", 1000);
     
-    ros::Rate rate(1000);
-
+    ros::WallRate rate(1000);
+    
     trigger.enable = true;
+    time_step_srv.request.value = 1;
 
     int loop_counter = 0;
-    while (ros::ok()){
+    while (ros::ok() && time_step_client.call(time_step_srv)){
         ros::spinOnce();
 
         tb2phi(motor_cmd.module_a.theta, motor_cmd.module_a.beta, AR_motor_srv.request.value, AL_motor_srv.request.value);
@@ -137,25 +126,29 @@ int main(int argc, char **argv) {
         tb2phi(motor_cmd.module_c.theta, motor_cmd.module_c.beta, CR_motor_srv.request.value, CL_motor_srv.request.value);
         tb2phi(motor_cmd.module_d.theta, motor_cmd.module_d.beta, DR_motor_srv.request.value, DL_motor_srv.request.value);
 
-        if (!( AR_motor_client.call(AR_motor_srv)
-            && AL_motor_client.call(AL_motor_srv)
-            && BR_motor_client.call(BR_motor_srv)
-            && BL_motor_client.call(BL_motor_srv)
-            && CR_motor_client.call(CR_motor_srv)
-            && CL_motor_client.call(CL_motor_srv)
-            && DR_motor_client.call(DR_motor_srv)
-            && DL_motor_client.call(DL_motor_srv) )){ break; }
+        AR_motor_client.call(AR_motor_srv);
+        AL_motor_client.call(AL_motor_srv);
+        BR_motor_client.call(BR_motor_srv);
+        BL_motor_client.call(BL_motor_srv);
+        CR_motor_client.call(CR_motor_srv);
+        CL_motor_client.call(CL_motor_srv);
+        DR_motor_client.call(DR_motor_srv);
+        DL_motor_client.call(DL_motor_srv);
 
         phi2tb(AR_phi, AL_phi, motor_state.module_a.theta, motor_state.module_a.beta);
         phi2tb(BR_phi, BL_phi, motor_state.module_b.theta, motor_state.module_b.beta);
         phi2tb(CR_phi, CL_phi, motor_state.module_c.theta, motor_state.module_c.beta);
         phi2tb(DR_phi, DL_phi, motor_state.module_d.theta, motor_state.module_d.beta);
 
-
         motor_state.header.seq = loop_counter;
 
         motor_state_pub.publish(motor_state);
         trigger_pub.publish(trigger);
+
+        double clock = loop_counter*0.001;
+        simulationClock.clock.sec = (int)clock;
+        simulationClock.clock.nsec = round(1000 * (clock - simulationClock.clock.sec)) * 1.0e+6;
+        clock_pub.publish(simulationClock);
 
         loop_counter++;
 

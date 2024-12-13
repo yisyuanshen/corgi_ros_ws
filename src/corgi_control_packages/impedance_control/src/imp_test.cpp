@@ -19,24 +19,6 @@ void force_state_cb(const corgi_msgs::ForceStateStamped state){
     force_state = state;
 }
 
-void motor_cmd_init(){
-    motor_cmd.module_a.theta = 17/180.0*M_PI;
-    motor_cmd.module_b.theta = 17/180.0*M_PI;
-    motor_cmd.module_c.theta = 17/180.0*M_PI;
-    motor_cmd.module_d.theta = 17/180.0*M_PI;
-
-    motor_cmd.module_a.kp = 90;
-    motor_cmd.module_b.kp = 90;
-    motor_cmd.module_c.kp = 90;
-    motor_cmd.module_d.kp = 90;
-
-    motor_cmd.module_a.kd = 1.75;
-    motor_cmd.module_b.kd = 1.75;
-    motor_cmd.module_c.kd = 1.75;
-    motor_cmd.module_d.kd = 1.75;
-}
-
-
 int main(int argc, char **argv) {
 
     ROS_INFO("Impedance Control Test Starts\n");
@@ -73,11 +55,18 @@ int main(int argc, char **argv) {
         motor_cmd.module_c.theta = 17/180.0*M_PI + 1 - cos(seq/5000.0*M_PI);
         motor_cmd.module_d.theta = 17/180.0*M_PI + 1 - cos(seq/5000.0*M_PI);
 
-        // motor_cmd.module_a.beta = -sin(seq/10000.0*M_PI);
-        // motor_cmd.module_b.beta = sin(seq/10000.0*M_PI);
-        // motor_cmd.module_c.beta = sin(seq/10000.0*M_PI);
-        // motor_cmd.module_d.beta = -sin(seq/10000.0*M_PI);
+        motor_cmd.module_a.beta = 1.5 * -sin(seq/10000.0*M_PI);
+        motor_cmd.module_b.beta = 1.5 * sin(seq/10000.0*M_PI);
+        motor_cmd.module_c.beta = 1.5 * sin(seq/10000.0*M_PI);
+        motor_cmd.module_d.beta = 1.5 * -sin(seq/10000.0*M_PI);
 
+        std::cout << "seq = " << force_state.header.seq << std::endl
+                  << force_state.module_a.fx << ", " << force_state.module_a.fz << std::endl
+                  << force_state.module_b.fx << ", " << force_state.module_b.fz << std::endl
+                  << force_state.module_c.fx << ", " << force_state.module_c.fz << std::endl
+                  << force_state.module_d.fx << ", " << force_state.module_d.fz << std::endl
+                  << std::endl;
+        
 
         motor_cmd_pub.publish(motor_cmd);
 
