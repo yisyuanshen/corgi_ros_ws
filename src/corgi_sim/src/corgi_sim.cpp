@@ -98,32 +98,32 @@ int main(int argc, char **argv) {
 
     ros::ServiceClient time_step_client = nh.serviceClient<corgi_sim::set_int>("robot/time_step");
 
-    ros::ServiceClient AR_motor_client = nh.serviceClient<corgi_sim::set_float>("lf_right_motor/set_position");
-    ros::ServiceClient AL_motor_client = nh.serviceClient<corgi_sim::set_float>("lf_left_motor/set_position");
-    ros::ServiceClient BR_motor_client = nh.serviceClient<corgi_sim::set_float>("rf_right_motor/set_position");
-    ros::ServiceClient BL_motor_client = nh.serviceClient<corgi_sim::set_float>("rf_left_motor/set_position");
-    ros::ServiceClient CR_motor_client = nh.serviceClient<corgi_sim::set_float>("rh_right_motor/set_position");
-    ros::ServiceClient CL_motor_client = nh.serviceClient<corgi_sim::set_float>("rh_left_motor/set_position");
-    ros::ServiceClient DR_motor_client = nh.serviceClient<corgi_sim::set_float>("lh_right_motor/set_position");
-    ros::ServiceClient DL_motor_client = nh.serviceClient<corgi_sim::set_float>("lh_left_motor/set_position");
+    ros::ServiceClient AR_motor_client = nh.serviceClient<corgi_sim::set_float>("lf_left_motor/set_position");
+    ros::ServiceClient AL_motor_client = nh.serviceClient<corgi_sim::set_float>("lf_right_motor/set_position");
+    ros::ServiceClient BR_motor_client = nh.serviceClient<corgi_sim::set_float>("rf_left_motor/set_position");
+    ros::ServiceClient BL_motor_client = nh.serviceClient<corgi_sim::set_float>("rf_right_motor/set_position");
+    ros::ServiceClient CR_motor_client = nh.serviceClient<corgi_sim::set_float>("rh_left_motor/set_position");
+    ros::ServiceClient CL_motor_client = nh.serviceClient<corgi_sim::set_float>("rh_right_motor/set_position");
+    ros::ServiceClient DR_motor_client = nh.serviceClient<corgi_sim::set_float>("lh_left_motor/set_position");
+    ros::ServiceClient DL_motor_client = nh.serviceClient<corgi_sim::set_float>("lh_right_motor/set_position");
     
-    ros::Subscriber AR_encoder_sub = nh.subscribe<corgi_sim::Float64Stamped>("lf_right_motor_sensor/value", 1, AR_encoder_cb);
-    ros::Subscriber AL_encoder_sub = nh.subscribe<corgi_sim::Float64Stamped>("lf_left_motor_sensor/value" , 1, AL_encoder_cb);
-    ros::Subscriber BR_encoder_sub = nh.subscribe<corgi_sim::Float64Stamped>("rf_right_motor_sensor/value", 1, BR_encoder_cb);
-    ros::Subscriber BL_encoder_sub = nh.subscribe<corgi_sim::Float64Stamped>("rf_left_motor_sensor/value" , 1, BL_encoder_cb);
-    ros::Subscriber CR_encoder_sub = nh.subscribe<corgi_sim::Float64Stamped>("rh_right_motor_sensor/value", 1, CR_encoder_cb);
-    ros::Subscriber CL_encoder_sub = nh.subscribe<corgi_sim::Float64Stamped>("rh_left_motor_sensor/value" , 1, CL_encoder_cb);
-    ros::Subscriber DR_encoder_sub = nh.subscribe<corgi_sim::Float64Stamped>("lh_right_motor_sensor/value", 1, DR_encoder_cb);
-    ros::Subscriber DL_encoder_sub = nh.subscribe<corgi_sim::Float64Stamped>("lh_left_motor_sensor/value" , 1, DL_encoder_cb);
+    ros::Subscriber AR_encoder_sub = nh.subscribe<corgi_sim::Float64Stamped>("lf_left_motor_sensor/value", 1, AR_encoder_cb);
+    ros::Subscriber AL_encoder_sub = nh.subscribe<corgi_sim::Float64Stamped>("lf_right_motor_sensor/value" , 1, AL_encoder_cb);
+    ros::Subscriber BR_encoder_sub = nh.subscribe<corgi_sim::Float64Stamped>("rf_left_motor_sensor/value", 1, BR_encoder_cb);
+    ros::Subscriber BL_encoder_sub = nh.subscribe<corgi_sim::Float64Stamped>("rf_right_motor_sensor/value" , 1, BL_encoder_cb);
+    ros::Subscriber CR_encoder_sub = nh.subscribe<corgi_sim::Float64Stamped>("rh_left_motor_sensor/value", 1, CR_encoder_cb);
+    ros::Subscriber CL_encoder_sub = nh.subscribe<corgi_sim::Float64Stamped>("rh_right_motor_sensor/value" , 1, CL_encoder_cb);
+    ros::Subscriber DR_encoder_sub = nh.subscribe<corgi_sim::Float64Stamped>("lh_left_motor_sensor/value", 1, DR_encoder_cb);
+    ros::Subscriber DL_encoder_sub = nh.subscribe<corgi_sim::Float64Stamped>("lh_right_motor_sensor/value" , 1, DL_encoder_cb);
     
-    ros::Subscriber AR_torque_sub = nh.subscribe<corgi_sim::Float64Stamped>("lf_right_motor/torque_feedback", 1, AR_torque_cb);
-    ros::Subscriber AL_torque_sub = nh.subscribe<corgi_sim::Float64Stamped>("lf_left_motor/torque_feedback" , 1, AL_torque_cb);
-    ros::Subscriber BR_torque_sub = nh.subscribe<corgi_sim::Float64Stamped>("rf_right_motor/torque_feedback", 1, BR_torque_cb);
-    ros::Subscriber BL_torque_sub = nh.subscribe<corgi_sim::Float64Stamped>("rf_left_motor/torque_feedback" , 1, BL_torque_cb);
-    ros::Subscriber CR_torque_sub = nh.subscribe<corgi_sim::Float64Stamped>("rh_right_motor/torque_feedback", 1, CR_torque_cb);
-    ros::Subscriber CL_torque_sub = nh.subscribe<corgi_sim::Float64Stamped>("rh_left_motor/torque_feedback" , 1, CL_torque_cb);
-    ros::Subscriber DR_torque_sub = nh.subscribe<corgi_sim::Float64Stamped>("lh_right_motor/torque_feedback", 1, DR_torque_cb);
-    ros::Subscriber DL_torque_sub = nh.subscribe<corgi_sim::Float64Stamped>("lh_left_motor/torque_feedback" , 1, DL_torque_cb);
+    ros::Subscriber AR_torque_sub = nh.subscribe<corgi_sim::Float64Stamped>("lf_left_motor/torque_feedback", 1, AR_torque_cb);
+    ros::Subscriber AL_torque_sub = nh.subscribe<corgi_sim::Float64Stamped>("lf_right_motor/torque_feedback" , 1, AL_torque_cb);
+    ros::Subscriber BR_torque_sub = nh.subscribe<corgi_sim::Float64Stamped>("rf_left_motor/torque_feedback", 1, BR_torque_cb);
+    ros::Subscriber BL_torque_sub = nh.subscribe<corgi_sim::Float64Stamped>("rf_right_motor/torque_feedback" , 1, BL_torque_cb);
+    ros::Subscriber CR_torque_sub = nh.subscribe<corgi_sim::Float64Stamped>("rh_left_motor/torque_feedback", 1, CR_torque_cb);
+    ros::Subscriber CL_torque_sub = nh.subscribe<corgi_sim::Float64Stamped>("rh_right_motor/torque_feedback" , 1, CL_torque_cb);
+    ros::Subscriber DR_torque_sub = nh.subscribe<corgi_sim::Float64Stamped>("lh_left_motor/torque_feedback", 1, DR_torque_cb);
+    ros::Subscriber DL_torque_sub = nh.subscribe<corgi_sim::Float64Stamped>("lh_right_motor/torque_feedback" , 1, DL_torque_cb);
     
     ros::Subscriber motor_cmd_sub = nh.subscribe<corgi_msgs::MotorCmdStamped>("motor/command", 1, motor_cmd_cb);
     ros::Publisher motor_state_pub = nh.advertise<corgi_msgs::MotorStateStamped>("motor/state", 1000);
@@ -139,8 +139,6 @@ int main(int argc, char **argv) {
     std::cout << "\nInput the output filename and press Enter to start the simulation: ";
     trigger.output_filename = get_lastest_input();
     
-    trigger_pub.publish(trigger);
-
     int loop_counter = 0;
     while (ros::ok() && time_step_client.call(time_step_srv)){
         ros::spinOnce();
@@ -167,6 +165,7 @@ int main(int argc, char **argv) {
         motor_state.header.seq = loop_counter;
 
         motor_state_pub.publish(motor_state);
+        trigger_pub.publish(trigger);
 
         double clock = loop_counter*0.001;
         simulationClock.clock.sec = (int)clock;
