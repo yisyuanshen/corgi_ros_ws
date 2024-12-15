@@ -3,6 +3,7 @@
 #include <sstream>
 #include <vector>
 #include <sys/stat.h>
+#include <signal.h>
 
 #include "ros/ros.h"
 
@@ -26,6 +27,19 @@ std::string output_file_path = "";
 bool file_exists(const std::string &filename) {
     struct stat buffer;
     return (stat(filename.c_str(), &buffer) == 0);
+}
+
+
+void signal_handler(int signum) {
+    ROS_INFO("Interrupt received.");
+
+    if (output_file.is_open()) {
+        output_file.close();
+        ROS_INFO("Data successfully saved.");
+    }
+
+    ros::shutdown();
+    exit(signum);
 }
 
 
@@ -167,6 +181,8 @@ void write_data() {
                 << power_state.v_10 << "," << power_state.i_10 << ","
                 << power_state.v_11 << "," << power_state.i_11
                 << "\n";
+                
+    output_file.flush();
 }
 
 
@@ -182,6 +198,8 @@ int main(int argc, char **argv) {
     ros::Subscriber power_cmd_sub = nh.subscribe<corgi_msgs::PowerCmdStamped>("power/command", 1000, power_cmd_cb);
     ros::Subscriber power_state_sub = nh.subscribe<corgi_msgs::PowerStateStamped>("power/state", 1000, power_state_cb);
     ros::Rate rate(1000);
+
+    signal(SIGINT, signal_handler);
 
     while (ros::ok()) {
         ros::spinOnce();

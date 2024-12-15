@@ -5,6 +5,7 @@
     <arg name="mode" default="realtime"/>  <!--realtime pause fast-->
 
     <node name="webots_launcher" pkg="corgi_sim" type="webots_launcher.py" args="--world=$(arg world) --mode=$(arg mode)" required="true"/>
-    <node name="corgi_sim" pkg="corgi_sim" type="corgi_sim" respawn="true"/>
     <node name="force_estimation" pkg="impedance_control" type="force_estimation"/>
+    <node name="data_recorder" pkg="data_recorder" type="data_recorder"/>
+    <node name="corgi_sim" pkg="corgi_sim" type="corgi_sim" respawn="true" output="screen"/>
 </launch>

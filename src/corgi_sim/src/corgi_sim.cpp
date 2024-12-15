@@ -1,4 +1,5 @@
 #include <iostream>
+#include <signal.h>
 #include "ros/ros.h"
 #include "rosgraph_msgs/Clock.h"
 #include "corgi_sim/set_int.h"
@@ -66,6 +67,22 @@ void tb2phi(double theta, double beta, double &phi_r, double &phi_l){
     phi_l = beta + theta - theta_0;
 }
 
+std::string get_lastest_input() {
+    std::string input;
+    auto start = std::chrono::steady_clock::now();
+    while (true) {
+        std::getline(std::cin, input);
+        auto elapsed = std::chrono::steady_clock::now() - start;
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count() >= 100) { return input; }
+    }
+}
+
+void signal_handler(int signum) {
+    ROS_INFO("Interrupt received.");
+    ros::shutdown();
+    exit(signum);
+}
+
 
 int main(int argc, char **argv) {
     ROS_INFO("Corgi Simulation Starts\n");
@@ -114,8 +131,15 @@ int main(int argc, char **argv) {
     
     ros::WallRate rate(1000);
     
+    signal(SIGINT, signal_handler);
+
     trigger.enable = true;
     time_step_srv.request.value = 1;
+
+    std::cout << "\nInput the output filename and press Enter to start the simulation: ";
+    trigger.output_filename = get_lastest_input();
+    
+    trigger_pub.publish(trigger);
 
     int loop_counter = 0;
     while (ros::ok() && time_step_client.call(time_step_srv)){
@@ -143,7 +167,6 @@ int main(int argc, char **argv) {
         motor_state.header.seq = loop_counter;
 
         motor_state_pub.publish(motor_state);
-        trigger_pub.publish(trigger);
 
         double clock = loop_counter*0.001;
         simulationClock.clock.sec = (int)clock;
@@ -154,6 +177,9 @@ int main(int argc, char **argv) {
 
         rate.sleep();
     }
+
+    trigger.enable = false;
+    trigger_pub.publish(trigger);
 
     ros::shutdown();
 
