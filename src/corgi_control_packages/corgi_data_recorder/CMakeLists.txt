@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 
-project(data_recorder LANGUAGES C CXX)
+project(corgi_data_recorder LANGUAGES C CXX)
 
 set(CMAKE_EXE_LINKER_FLAGS)
 set(CMAKE_CXX_STANDARD 17)

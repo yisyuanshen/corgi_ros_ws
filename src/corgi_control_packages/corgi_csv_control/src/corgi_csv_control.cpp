@@ -14,7 +14,7 @@ void trigger_cb(const corgi_msgs::TriggerStamped msg){
 }
 
 int main(int argc, char **argv) {
-    ros::init(argc, argv, "csv_control");
+    ros::init(argc, argv, "corgi_csv_control");
 
     ros::NodeHandle nh;
     ros::Publisher motor_cmd_pub = nh.advertise<corgi_msgs::MotorCmdStamped>("motor/command", 1000);
@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
     
     std::string csv_file_path;
     csv_file_path = std::getenv("HOME");
-    csv_file_path += "/corgi_ws/corgi_ros_ws/src/corgi_control_packages/csv_control/input_csv/";
+    csv_file_path += "/corgi_ws/corgi_ros_ws/src/corgi_control_packages/corgi_csv_control/input_csv/";
     csv_file_path += argv[1];
     csv_file_path += ".csv";
     

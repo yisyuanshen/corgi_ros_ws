@@ -49,7 +49,7 @@ void trigger_cb(const corgi_msgs::TriggerStamped msg){
     output_file_name = msg.output_filename;
     
     if (trigger && msg.output_filename != "") {
-        output_file_path = std::string(getenv("HOME")) + "/corgi_ws/corgi_ros_ws/src/corgi_control_packages/data_recorder/output_data/" + output_file_name;
+        output_file_path = std::string(getenv("HOME")) + "/corgi_ws/corgi_ros_ws/src/corgi_control_packages/corgi_data_recorder/output_data/" + output_file_name;
 
         int index = 1;
         std::string file_path_with_extension = output_file_path + ".csv";
@@ -189,7 +189,7 @@ void write_data() {
 int main(int argc, char **argv) {
     ROS_INFO("Data Recorder Starts\n");
     
-    ros::init(argc, argv, "data_recorder");
+    ros::init(argc, argv, "corgi_data_recorder");
 
     ros::NodeHandle nh;
     ros::Subscriber trigger_sub = nh.subscribe<corgi_msgs::TriggerStamped>("trigger", 1000, trigger_cb);

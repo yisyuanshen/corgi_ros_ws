@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 
-project(csv_control LANGUAGES C CXX)
+project(corgi_impedance_control LANGUAGES C CXX)
 
 set(CMAKE_EXE_LINKER_FLAGS)
 set(CMAKE_CXX_STANDARD 17)
@@ -12,11 +12,15 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/build)
 
 set(corgi_msgs_DIR "${CMAKE_CURRENT_LIST_DIR}/../../devel/share/corgi_msgs/cmake")
-find_package(catkin REQUIRED COMPONENTS roscpp std_msgs rosgraph_msgs geometry_msgs corgi_msgs)
-catkin_package(CATKIN_DEPENDS roscpp std_msgs rosgraph_msgs geometry_msgs corgi_msgs)
+find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+find_package(catkin REQUIRED COMPONENTS roscpp std_msgs rosgraph_msgs geometry_msgs corgi_msgs corgi_utils)
+catkin_package(CATKIN_DEPENDS roscpp std_msgs rosgraph_msgs geometry_msgs corgi_msgs corgi_utils)
 include_directories(
   ${catkin_INCLUDE_DIRS}
   ${CMAKE_CURRENT_LIST_DIR}
+  include
 )
+
+find_library(CORGI_UTILS corgi_utils)
 
 add_subdirectory(src)

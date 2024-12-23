@@ -367,7 +367,7 @@ class CorgiControlPanel(QWidget):
     def csv_control_cmd(self):        
         if self.btn_csv_run.isChecked():
             self.btn_csv_run.setText('Stop')
-            self.process_csv = subprocess.Popen(['rosrun', 'csv_control', 'csv_control', self.edit_csv.text()])
+            self.process_csv = subprocess.Popen(['rosrun', 'corgi_csv_control', 'corgi_csv_control', self.edit_csv.text()])
 
         else:
             self.btn_csv_run.setText('Run')
@@ -511,8 +511,8 @@ class CorgiControlPanel(QWidget):
         self.btn_ros_bridge.setChecked(False)
         self.ros_bridge_cmd()
         
-        try: subprocess.run(['rosnode', 'kill', 'data_recorder'], check=True)
-        except subprocess.CalledProcessError as e: print(f'Failed to kill data_recorder: {e}')
+        try: subprocess.run(['rosnode', 'kill', 'corgi_data_recorder'], check=True)
+        except subprocess.CalledProcessError as e: print(f'Failed to kill corgi_data_recorder: {e}')
         
         
 if __name__ == '__main__':

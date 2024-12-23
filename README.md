@@ -30,9 +30,9 @@ ${HOME}/
             ├─ corgi_sim                - Simulation environment
             └─ corgi_control_packages/       - Control modules for robot operation
                 ├─ corgi_utils                  - Utility functions
-                ├─ csv_control                  - Trajectory control using CSV files
-                ├─ data_recorder                - Data logging tools
-                └─ impedance_control            - Implementation of impedance control
+                ├─ corgi_csv_control            - Trajectory control using CSV files
+                ├─ corgi_data_recorder          - Data logging tools
+                └─ corgi_impedance_control      - Implementation of impedance control
 ```
 
 Note: Adjust the paths as necessary if your directory structure differs.
@@ -71,7 +71,7 @@ roslaunch corgi_panel corgi_control_panel.launch
 If you have a CSV trajectory prepared, you can run it as follows:
 
 ```bash
-rosrun csv_control csv_control [your_csv_traj.csv]
+rosrun corgi_csv_control corgi_csv_control [your_csv_traj.csv]
 ```
 
 ### Real Time Control
