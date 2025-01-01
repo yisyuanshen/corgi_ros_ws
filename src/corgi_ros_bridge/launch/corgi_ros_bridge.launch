@@ -1,3 +1,0 @@
-<launch>
-    <node name="corgi_ros_bridge" pkg="corgi_ros_bridge" type="corgi_ros_bridge.sh" output="screen" />
-</launch>
