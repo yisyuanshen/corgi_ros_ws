@@ -1,3 +1,8 @@
+/**
+ * @file InformationFilter.cpp
+ * 
+ * @author peichunhuang
+ */
 #include "KLD_estimation/InformationFilter.hpp"
 
 namespace estimation_model {

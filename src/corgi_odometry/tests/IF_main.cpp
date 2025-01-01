@@ -1,3 +1,8 @@
+/**
+ * @file IF_main.cpp
+ * 
+ * @author peichunhuang
+ */
 #include "KLD_estimation/InformationFilter.hpp"
 #include "KLD_estimation/csv_reader.hpp"
 #include <random>

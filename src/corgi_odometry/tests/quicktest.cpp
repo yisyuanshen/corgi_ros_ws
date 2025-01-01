@@ -1,3 +1,8 @@
+/**
+ * @file quicktest.cpp
+ * 
+ * @author peichunhuang
+ */
 #include "kinematic/Leg.hpp"
 
 int main() {

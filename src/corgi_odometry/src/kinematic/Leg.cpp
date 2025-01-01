@@ -1,3 +1,8 @@
+/**
+ * @file Leg.cpp
+ * 
+ * @author peichunhuang
+ */
 #include "kinematic/Leg.hpp"
 void Leg::Calculate(float theta, float theta_d, float theta_dd, float beta, float beta_d, float beta_dd)
 {

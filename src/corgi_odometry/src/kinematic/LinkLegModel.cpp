@@ -1,3 +1,8 @@
+/**
+ * @file LinkLegModel.cpp
+ * 
+ * @author peichunhuang
+ */
 #include "kinematic/LinkLegModel.hpp"
 void LinkLegModel::calculate(float theta, float theta_d, float theta_dd)
 {
