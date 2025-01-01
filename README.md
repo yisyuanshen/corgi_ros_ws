@@ -1,4 +1,5 @@
-# This branch integrates an odometry package for the Corgi robot to enhance motion tracking and navigation.
+# odometry
+This branch integrates an odometry package for the Corgi robot to enhance motion tracking and navigation.
 
 # Completed Work
 ## Offline Implementation
