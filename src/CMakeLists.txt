@@ -94,8 +94,6 @@ endif()
 
 catkin_workspace()
 
-file(GLOB SUBDIRS "src/corgi_control_packages/*")
-
 foreach(subdir ${SUBDIRS})
   if(IS_DIRECTORY ${subdir})
     add_subdirectory(${subdir})

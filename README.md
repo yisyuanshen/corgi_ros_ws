@@ -23,16 +23,14 @@ ${HOME}/
     ├─ grpc_core/               - gRPC communication dependency
     └─ corgi_ros_ws/            - Main ROS workspace
         └─ src/                     - Source code for Corgi packages
+            ├─ corgi_csv_control        - Trajectory control using CSV files
+            ├─ corgi_data_recorder      - Data logging tools
             ├─ corgi_msgs               - ROS message definitions
             ├─ corgi_panel              - Control panel for the real robot
             ├─ corgi_ros_bridge         - ROS bridge for gRPC communication
-            ├─ corgi_virtual_agent      - Test gRPC without a real robot
             ├─ corgi_sim                - Simulation environment
-            └─ corgi_control_packages/       - Control modules for robot operation
-                ├─ corgi_utils                  - Utility functions
-                ├─ corgi_csv_control            - Trajectory control using CSV files
-                ├─ corgi_data_recorder          - Data logging tools
-                └─ corgi_impedance_control      - Implementation of impedance control
+            ├─ corgi_utils              - Utility functions
+            └─ corgi_virtual_agent      - Test gRPC without a real robot
 ```
 
 Note: Adjust the paths as necessary if your directory structure differs.
