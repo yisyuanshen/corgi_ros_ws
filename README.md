@@ -57,6 +57,8 @@ To run the simulation in Webots:
 roslaunch corgi_sim run_simulation.launch
 ```
 
+Note: Please add ```export WEBOTS_HOME=/usr/local/webots``` in ```~/.bashrc``` file.
+
 ### Real Robot
 To run the control panel for the real robot:
 
@@ -71,7 +73,7 @@ roslaunch corgi_panel corgi_control_panel.launch
 If you have a CSV trajectory prepared, you can run it as follows:
 
 ```bash
-rosrun corgi_csv_control corgi_csv_control [your_csv_traj.csv]
+rosrun corgi_csv_control corgi_csv_control [your_csv_traj.csv (w/o suffix)]
 ```
 
 ### Real Time Control
@@ -80,3 +82,5 @@ For more advanced, real-time control strategies, run your corresponding real-tim
 ```bash
 rosrun your_real_time_package your_real_time_node
 ```
+
+Note: Publish ```/motor/command``` topic to control the robot.
