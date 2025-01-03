@@ -1,2 +1,2 @@
-float64 fx
-float64 fz
+float64 Fx
+float64 Fy
