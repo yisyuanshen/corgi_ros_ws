@@ -3,3 +3,4 @@ devel
 logs
 .*
 *TEST*
+src/corgi_odometry/data/
