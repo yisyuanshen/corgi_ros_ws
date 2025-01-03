@@ -54,8 +54,9 @@ int main (int argc, char* argv[]) {
     Eigen::Vector<float, 5> encoder_lh(df.iloc("lh.theta", start_index), df.iloc("lh.beta", start_index), df.iloc("lh.beta_d", start_index), df.iloc("w.y", start_index), df.iloc("lh.theta_d", start_index));
 
     Eigen::Vector3f v_init(0, 0, 0) ;
-    int j = 10;
-    float dt = 0.002;
+    const int j = 10; // sample time (matrix size)
+    const int SAMPLE_RATE = 200; // 200 500 1000 400 Hz 
+    float dt = 1 / (float)SAMPLE_RATE;
     U u(j, Eigen::Vector3f(0, 0, 0), Eigen::Vector3f(0, 0, 0), dt) ;
     Leg lf_leg(Eigen::Vector3f(0.222, 0.193, 0), 0.1, 0.012);
     Leg rf_leg(Eigen::Vector3f(0.222, -0.193, 0), 0.1, 0.012);
