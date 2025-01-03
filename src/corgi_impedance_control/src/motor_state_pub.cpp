@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
 
     corgi_msgs::MotorStateStamped motor_state;
 
-    std::vector<corgi_msgs::MotorState*> motor_states = {
+    std::vector<corgi_msgs::MotorState*> motor_state_modules = {
         &motor_state.module_a,
         &motor_state.module_b,
         &motor_state.module_c,
@@ -26,8 +26,8 @@ int main(int argc, char **argv) {
     while (ros::ok()) {
         ros::spinOnce();
         
-        for (auto& state : motor_states){
-            state->theta = 17/180.0*M_PI;
+        for (auto& state : motor_state_modules){
+            state->theta = 30/180.0*M_PI;
             state->beta = 0;
             state->velocity_r = 0;
             state->velocity_l = 0;

@@ -1,0 +1,6 @@
+<launch>
+    <node name="impedance_control" pkg="corgi_impedance_control" type="impedance_control" output="screen"/>
+    <node name="force_estimation" pkg="corgi_impedance_control" type="force_estimation" output="screen" />
+    <node name="motor_state_pub" pkg="corgi_impedance_control" type="motor_state_pub" output="screen" />
+    <node name="imp_cmd_pub" pkg="corgi_impedance_control" type="imp_cmd_pub" output="screen" />
+</launch>

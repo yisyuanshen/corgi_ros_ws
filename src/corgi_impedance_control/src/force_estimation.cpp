@@ -103,14 +103,14 @@ int main(int argc, char **argv) {
     ros::Rate rate(1000);
 
 
-    std::vector<corgi_msgs::MotorState*> motor_states = {
+    std::vector<corgi_msgs::MotorState*> motor_state_modules = {
         &motor_state.module_a,
         &motor_state.module_b,
         &motor_state.module_c,
         &motor_state.module_d
     };
 
-    std::vector<corgi_msgs::ForceState*> force_states = {
+    std::vector<corgi_msgs::ForceState*> force_state_modules = {
         &force_state.module_a,
         &force_state.module_b,
         &force_state.module_c,
@@ -123,10 +123,10 @@ int main(int argc, char **argv) {
 
         // printf("\n\nSeq = %d\n", motor_state.header.seq);
         for (int i=0; i<4; i++){
-            Eigen::MatrixXd force_est = estimate_force(motor_states[i]->theta, motor_states[i]->beta, motor_states[i]->torque_r, motor_states[i]->torque_l);
+            Eigen::MatrixXd force_est = estimate_force(motor_state_modules[i]->theta, motor_state_modules[i]->beta, motor_state_modules[i]->torque_r, motor_state_modules[i]->torque_l);
 
-            force_states[i]->fx = force_est(0, 0);
-            force_states[i]->fz = force_est(1, 0);
+            force_state_modules[i]->Fx = force_est(0, 0);
+            force_state_modules[i]->Fy = force_est(1, 0);
 
             // printf("TB = [%.4lf, %.4lf]\n", state->theta, state->beta);
             // printf("Force_est = [%.4lf, %.4lf]\n", force_est(0, 0), force_est(1, 0));
