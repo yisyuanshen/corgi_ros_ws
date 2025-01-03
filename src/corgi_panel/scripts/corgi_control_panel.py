@@ -340,7 +340,7 @@ class CorgiControlPanel(QWidget):
         file_dialog = QFileDialog(self)
         file_dialog.setWindowTitle('Open CSV File')
         file_dialog.setNameFilter('CSV Files (*.csv)')
-        file_dialog.setDirectory(os.path.expanduser('~/corgi_ws/corgi_ros_ws/src/corgi_control_packages/csv_control/input_csv/'))
+        file_dialog.setDirectory(os.path.expanduser('~/corgi_ws/corgi_ros_ws/input_csv/'))
         file_dialog.setStyleSheet('''background-color: white; font-family: Ubuntu; font-size: 24px; padding: 3px''')
 
         if file_dialog.exec() == QFileDialog.Accepted:

@@ -49,7 +49,7 @@ void trigger_cb(const corgi_msgs::TriggerStamped msg){
     output_file_name = msg.output_filename;
     
     if (trigger && msg.output_filename != "") {
-        output_file_path = std::string(getenv("HOME")) + "/corgi_ws/corgi_ros_ws/src/corgi_control_packages/corgi_data_recorder/output_data/" + output_file_name;
+        output_file_path = std::string(getenv("HOME")) + "/corgi_ws/corgi_ros_ws/output_data/" + output_file_name;
 
         int index = 1;
         std::string file_path_with_extension = output_file_path + ".csv";
