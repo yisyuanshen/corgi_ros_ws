@@ -9,8 +9,8 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   Headers.msg
-  ForceCmd.msg
-  ForceCmdStamped.msg
+  ImpedanceCmd.msg
+  ImpedanceCmdStamped.msg
   ForceState.msg
   ForceStateStamped.msg
   MotorCmd.msg
