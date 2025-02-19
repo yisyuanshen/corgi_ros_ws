@@ -12,10 +12,11 @@
 #include "corgi_msgs/FsmStateStamped.h"
 #include "corgi_msgs/TriggerStamped.h"
 
-#define REST_MODE 0
+#define IDLE_MODE 0
 #define CSV_MODE 1
 #define WHEEL_MODE 2
 #define WALK_MODE 3
 #define WLW_MODE 4
+#define STAIR_MODE 5
 
 #endif
