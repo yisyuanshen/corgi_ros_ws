@@ -19,6 +19,8 @@ int main(int argc, char **argv) {
     // Prepare the FSM command message.
     corgi_msgs::FsmCmdStamped fsm_cmd;
     fsm_cmd.next_mode = REST_MODE;
+    fsm_cmd.body_vel = 0.1;
+    fsm_cmd.turn_radius = 0;
 
     int loop_count = 0;
     while (ros::ok()) {
@@ -31,7 +33,7 @@ int main(int argc, char **argv) {
         // Wait for user input (this is a blocking call).
         char input_char;
         std::cout << "[0] REST; [1] CSV; [2] WHEEL; [3] WALK; [4] WLW;\n"
-                  << "[p] Pause; [r] Resume; [s] Stop; [q] Quit:  ";
+                  << "[p] Pause; [r] Resume; [t] Stop; [q] Quit:  ";
         std::cin >> input_char;
 
         // Process the user input.
@@ -57,11 +59,23 @@ int main(int argc, char **argv) {
             case 'r':
                 fsm_cmd.pause = false;
                 break;
-            case 's':
+            case 't':
                 fsm_cmd.stop = true;
                 return 0;
-            case 'q':
-                return 0;
+            case 'w':
+                fsm_cmd.body_vel += 0.01;
+                std::cout << "Body Velocity: " << fsm_cmd.body_vel << std::endl;
+                break;
+            case 'a':
+                fsm_cmd.turn_radius += 0.02;
+                break;
+            case 's':
+                fsm_cmd.body_vel -= 0.01;
+                std::cout << "Body Velocity: " << fsm_cmd.body_vel << std::endl;
+                break;
+            case 'd':
+                fsm_cmd.turn_radius -= 0.02;
+                break;
             default:
                 std::cout << "Unrecognized input, using previous settings." << std::endl;
                 break;

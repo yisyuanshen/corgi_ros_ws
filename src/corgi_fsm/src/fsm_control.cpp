@@ -59,6 +59,8 @@ int main(int argc, char **argv) {
 
     bool sim = true;
     double body_vel = 0.1;
+    double walk_freq = 0.1/0.3;
+    double turn_radius = 0;
 
     LegModel leg_model(sim);
 
@@ -81,6 +83,9 @@ int main(int argc, char **argv) {
     int loop_count = 0;
     while (ros::ok()) {
         ros::spinOnce();
+
+        body_vel = fsm_cmd.body_vel;
+        turn_radius = fsm_cmd.turn_radius;
 
         if (fsm_cmd.next_mode != current_mode && transform_finished) {
             next_mode = fsm_cmd.next_mode;
@@ -134,6 +139,9 @@ int main(int argc, char **argv) {
                     }
                     else {
                         walk_gait.initialize(init_eta);
+                        walk_gait.set_step_length(0.3);
+                        walk_freq = body_vel / 0.3;
+
                         ROS_INFO("FSM: Entering WALK MODE\n");
                     }
                     break;
@@ -161,7 +169,7 @@ int main(int argc, char **argv) {
 
             case WHEEL_MODE:
                 for (int i=0; i<4; i++){
-                    motor_cmd_modules[i]->theta =17/180.0*M_PI;
+                    motor_cmd_modules[i]->theta = 17/180.0*M_PI;
                     motor_cmd_modules[i]->beta += (i == 1 || i == 2) ? -body_vel/leg_model.radius*0.001 : body_vel/leg_model.radius*0.001;
                 }
                 break;
@@ -183,6 +191,10 @@ int main(int argc, char **argv) {
                     }
                 }
                 else{
+                    walk_gait.set_velocity(body_vel);
+                    walk_gait.set_step_length(body_vel/walk_freq);
+                    // walk_gait.set_turn_radius(turn_radius);
+
                     eta_list = walk_gait.step();
                 }
 
