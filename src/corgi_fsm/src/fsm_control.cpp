@@ -62,15 +62,17 @@ int main(int argc, char **argv) {
     bool sim = true;
     double body_vel = 0.1;
     double stair_dist = 4;
-    double walk_freq = 0.1/0.3;
     double turn_radius = 0;
 
-    // initialization
+    // initialize
     LegModel leg_model(sim);
     int current_mode = IDLE_MODE;
     int next_mode = IDLE_MODE;
     bool switch_mode = false;
     bool transform_finished = true;
+    bool swing_finished = true;
+    int step_num_to_stair = 0;
+    bool stair_arrived = false;
     bool paused = false;
 
     std::array<std::array<double, 4>, 2> eta_list;
@@ -94,7 +96,7 @@ int main(int argc, char **argv) {
         turn_radius = fsm_cmd.turn_radius;
 
         // check if next_mode is changed
-        if (fsm_cmd.next_mode != current_mode && transform_finished) {
+        if (fsm_cmd.next_mode != current_mode && transform_finished && swing_finished) {
             next_mode = fsm_cmd.next_mode;
             switch_mode = true;
         }
@@ -105,6 +107,7 @@ int main(int argc, char **argv) {
                 ROS_INFO("FSM: PAUSE!\n");
                 paused = true;
             }
+            rate.sleep();
             continue;
         }
         else {
@@ -133,6 +136,7 @@ int main(int argc, char **argv) {
                         ROS_INFO("FSM: Entering CSV MODE\n");
                         break;
                     }
+                    rate.sleep();
                     continue;
 
                 case WHEEL_MODE:
@@ -140,6 +144,7 @@ int main(int argc, char **argv) {
                         ROS_INFO("FSM: Entering WHEEL MODE\n");
                         break;
                     }
+                    rate.sleep();
                     continue;
 
                 case WALK_MODE:
@@ -155,12 +160,19 @@ int main(int argc, char **argv) {
                     }
                     else if (current_mode == IDLE_MODE) {
                         walk_gait.initialize(init_eta);
-                        walk_gait.set_step_length(0.3);
-                        walk_freq = body_vel / 0.3;
 
                         ROS_INFO("FSM: Entering WALK MODE\n");
                         break;
                     }
+                    rate.sleep();
+                    continue;
+
+                case WLW_MODE:
+                    if (current_mode == IDLE_MODE) {
+                        ROS_INFO("FSM: Entering WLW MODE\n");
+                        break;
+                    }
+                    rate.sleep();
                     continue;
 
                 case STAIR_MODE:
@@ -175,6 +187,7 @@ int main(int argc, char **argv) {
                         ROS_INFO("FSM: Transforming From WHEEL To LEG\n");
                         break;
                     }
+                    rate.sleep();
                     continue;
 
                 default:
@@ -219,7 +232,6 @@ int main(int argc, char **argv) {
                 }
                 else{
                     walk_gait.set_velocity(body_vel);
-                    walk_gait.set_step_length(body_vel/walk_freq);
                     // walk_gait.set_turn_radius(turn_radius);
 
                     eta_list = walk_gait.step();
@@ -243,7 +255,7 @@ int main(int argc, char **argv) {
                 break;
 
             case STAIR_MODE:
-                if (!transform_finished){
+                if (!transform_finished) {
                     eta_list = wheel_to_leg_transformer.step();
 
                     if (wheel_to_leg_transformer.transform_finished) {
@@ -253,13 +265,29 @@ int main(int argc, char **argv) {
                         }
 
                         walk_gait.initialize(init_eta);
+                        
+                        double remaining_dist = stair_dist-wheel_to_leg_transformer.total_move_dist;
+                        step_num_to_stair = int((remaining_dist-0.3)/0.3) + 1;
+                        double step_length = (remaining_dist-0.3) / double(step_num_to_stair);
+
+                        std::cout << "Step Length: " << step_length << std::endl << std::endl;
+                        std::cout << "Step Number: " << step_num_to_stair << std::endl << std::endl;
+
+                        walk_gait.set_step_length(step_length);
+
                         transform_finished = true;
                         
-                        ROS_INFO("FSM: Entering WALK MODE\n");
+                        ROS_INFO("FSM: Transform Finished\n");
                     }
                 }
-                else{
+                else if (!stair_arrived) {
+                    walk_gait.set_velocity(body_vel);
+
                     eta_list = walk_gait.step();
+                }
+                else {
+                    rate.sleep();
+                    continue;
                 }
 
                 for (int i=0; i<4; i++) {
