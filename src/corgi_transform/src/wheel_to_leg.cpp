@@ -32,12 +32,12 @@ double WheelToLegTransformer::round_6(double value){
 
 double WheelToLegTransformer::find_closest_beta(double target_beta, double ref_beta){
     if (round_6(target_beta) < round_6(ref_beta)){
-        while (abs(round_6(target_beta)-round_6(ref_beta)) >= M_PI){
+        while (std::abs(round_6(target_beta)-round_6(ref_beta)) >= M_PI){
             target_beta += 2 * M_PI;
         }
     }
     else if (round_6(target_beta) > round_6(ref_beta)){
-        while (abs(round_6(target_beta)-round_6(ref_beta)) >= M_PI){
+        while (std::abs(round_6(target_beta)-round_6(ref_beta)) >= M_PI){
             target_beta -= 2 * M_PI;
         }
     }
@@ -66,7 +66,7 @@ std::array<double, 2> WheelToLegTransformer::find_hybrid_steps(double RH_beta, d
     
     for (int i=0; i<max_step_num; i++){
         if ((int)step_num%2 == 1){
-            step_length = abs(leg_model.radius * (RH_target_beta-RH_beta)) / step_num;
+            step_length = std::abs(leg_model.radius * (RH_target_beta-RH_beta)) / step_num;
             if (step_length < min_step_length){
                 RH_target_beta -= 2 * M_PI;
             }
@@ -75,7 +75,7 @@ std::array<double, 2> WheelToLegTransformer::find_hybrid_steps(double RH_beta, d
             }
         }
         else{
-            step_length = abs(leg_model.radius * (LH_target_beta-LH_beta)) / step_num;
+            step_length = std::abs(leg_model.radius * (LH_target_beta-LH_beta)) / step_num;
             if (step_length < min_step_length){
                 LH_target_beta -= 2 * M_PI;
             }
@@ -97,8 +97,9 @@ std::array<std::array<double, 4>, 2> WheelToLegTransformer::step(){
         if (step_count == stay_time_step) {
             RF_target_beta = 45/180.0*M_PI;
             RF_target_beta = find_smaller_closest_beta(RF_target_beta, curr_beta[1]);
-            body_move_dist = abs(leg_model.radius * (RF_target_beta-curr_beta[1]));
+            body_move_dist = std::abs(leg_model.radius * (RF_target_beta-curr_beta[1]));
             delta_time_step = int(round_3(body_move_dist/body_vel)/dt);
+            total_move_dist += delta_time_step*dt*body_vel;
             step_count = 0;
             stage++;
             std::cout << std::endl << "Stage 0 Finished.\n= = = = =" << std::endl << std::endl;
@@ -121,8 +122,10 @@ std::array<std::array<double, 4>, 2> WheelToLegTransformer::step(){
             std::cout << "RF Target Theta = " << round_3(RF_target_theta) << std::endl;
             std::cout << "RF Target Beta = " << round_3(RF_target_beta) << std::endl;
 
-            body_move_dist = abs(leg_model.radius * (RF_target_beta-curr_beta[1]));
+            body_move_dist = std::abs(leg_model.radius * (RF_target_beta-curr_beta[1]));
             delta_time_step = int(round_3(body_move_dist/body_vel)/dt);
+
+            total_move_dist += delta_time_step*dt*body_vel;
 
             RF_delta_beta = (RF_target_beta-curr_beta[1])/delta_time_step;
             RF_delta_theta = (RF_target_theta-curr_theta[1])/delta_time_step;
@@ -158,10 +161,12 @@ std::array<std::array<double, 4>, 2> WheelToLegTransformer::step(){
         
         curr_beta[2] += wheel_delta_beta;
         curr_beta[3] += wheel_delta_beta;
-
+        
         if (step_count == delta_time_step-1){
             delta_time_step_each = int(round_3(step_length/body_vel)/dt);
             delta_time_step = delta_time_step_each * step_num;
+
+            total_move_dist += delta_time_step*dt*body_vel;
 
             std::cout << "Step Number = " << step_num << std::endl;
             std::cout << "Step Length = " << round_3(step_length) << std::endl;
@@ -208,6 +213,8 @@ std::array<std::array<double, 4>, 2> WheelToLegTransformer::step(){
             body_move_dist = leg_model.radius * 10/180.0*M_PI;
             delta_time_step = int(round_3(body_move_dist/body_vel)/dt);
 
+            total_move_dist += delta_time_step*dt*body_vel;
+
             step_count = 0;
             stage++;
             std::cout << std::endl << "Stage 3 Finished.\n= = = = =" << std::endl << std::endl;
@@ -225,10 +232,12 @@ std::array<std::array<double, 4>, 2> WheelToLegTransformer::step(){
         curr_beta[2] += wheel_delta_beta;
         curr_beta[3] += wheel_delta_beta;
 
-        if (step_count == delta_time_step){
+        if (step_count == delta_time_step-1){
 
             body_move_dist = leg_model.radius * (45/180.0*M_PI - body_angle);
             delta_time_step = int(round_3(body_move_dist/body_vel)/dt);
+
+            total_move_dist += delta_time_step*dt*body_vel;
 
             if (step_num%2 == 0) {
                 transform_start_beta = curr_beta[3];
@@ -278,10 +287,10 @@ std::array<std::array<double, 4>, 2> WheelToLegTransformer::step(){
                           transform_start_beta+transform_delta_beta*step_count+body_angle);
         
         if (leg_model.rim == 2){
-            hind_body_height = abs(leg_model.L_l[1] - leg_model.radius);
+            hind_body_height = std::abs(leg_model.L_l[1] - leg_model.radius);
         }
         else if (leg_model.rim == 3){
-            hind_body_height = abs(leg_model.G[1] - leg_model.r);
+            hind_body_height = std::abs(leg_model.G[1] - leg_model.r);
         }
 
         body_angle = asin(((stance_height-hind_body_height)/BL));
@@ -342,9 +351,11 @@ std::array<std::array<double, 4>, 2> WheelToLegTransformer::step(){
             }
         }
 
-        if (step_count == delta_time_step){
+        if (step_count == delta_time_step-1){
             body_move_dist = 0.02;
             delta_time_step = int(round_3(body_move_dist/body_vel)/dt);
+
+            total_move_dist += delta_time_step*dt*body_vel;
 
             step_count = 0;
             stage++;
@@ -359,7 +370,7 @@ std::array<std::array<double, 4>, 2> WheelToLegTransformer::step(){
             curr_beta[i] = find_closest_beta(stance_eta[1]-body_angle, curr_beta[i]);
         }
 
-        if (step_count == delta_time_step){
+        if (step_count == delta_time_step-1){
 
             step_count = 0;
             stage++;
@@ -369,6 +380,7 @@ std::array<std::array<double, 4>, 2> WheelToLegTransformer::step(){
 
     case 7:  // transform finished
         transform_finished = true;
+        std::cout << "Total Distance: " << total_move_dist << std::endl;
 
     default:
         break;

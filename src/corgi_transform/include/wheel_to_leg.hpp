@@ -13,6 +13,7 @@ class WheelToLegTransformer {
         int stage = 0;
         bool transform_finished = false;
         int stay_time_step = 0;
+        double total_move_dist = 0;
 
         WheelToLegTransformer(bool sim=true);
 

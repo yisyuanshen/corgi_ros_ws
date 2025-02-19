@@ -22,6 +22,7 @@ int main(int argc, char **argv) {
 
     ROS_INFO("FSM Starts\n");
 
+    // ros setup
     ros::init(argc, argv, "corgi_fsm");
 
     ros::NodeHandle nh;
@@ -45,7 +46,7 @@ int main(int argc, char **argv) {
         &motor_cmd.module_d
     };
 
-
+    // default motor command
     for (auto& cmd : motor_cmd_modules){
         cmd->theta = 17/180.0*M_PI;
         cmd->beta = 0;
@@ -57,13 +58,15 @@ int main(int argc, char **argv) {
         cmd->kd_l = 1.75;
     }
 
+    // user config
     bool sim = true;
     double body_vel = 0.1;
+    double stair_dist = 4;
 
+    // initialization
     LegModel leg_model(sim);
-
-    int current_mode = REST_MODE;
-    int next_mode = REST_MODE;
+    int current_mode = IDLE_MODE;
+    int next_mode = IDLE_MODE;
     bool switch_mode = false;
     bool transform_finished = true;
     bool paused = false;
@@ -72,21 +75,26 @@ int main(int argc, char **argv) {
 
     double init_eta[8] = {18/180.0*M_PI, 0, 18/180.0*M_PI, 0, 18/180.0*M_PI, 0, 18/180.0*M_PI, 0};
     
+    // init walk class
     WalkGait walk_gait(sim, 0.0, 1000);
     walk_gait.initialize(init_eta);
     
+    // init wheel to leg class
     WheelToLegTransformer wheel_to_leg_transformer(sim);
     wheel_to_leg_transformer.initialize(init_eta);
+
 
     int loop_count = 0;
     while (ros::ok()) {
         ros::spinOnce();
 
+        // check if next_mode is changed
         if (fsm_cmd.next_mode != current_mode && transform_finished) {
             next_mode = fsm_cmd.next_mode;
             switch_mode = true;
         }
 
+        // check if pause command is sent
         if (fsm_cmd.pause) {
             if (!paused) {
                 ROS_INFO("FSM: PAUSE!\n");
@@ -101,6 +109,7 @@ int main(int argc, char **argv) {
             }
         }
 
+        // check if stop command is sent
         if (fsm_cmd.stop) {
             ROS_INFO("FSM: STOP!\n");
             ros::shutdown();
@@ -110,17 +119,23 @@ int main(int argc, char **argv) {
         // switch mode
         if (switch_mode){
             switch (next_mode) {
-                case REST_MODE:
-                    ROS_INFO("FSM: Entering REST MODE\n");
+                case IDLE_MODE:
+                    ROS_INFO("FSM: Entering IDLE MODE\n");
                     break;
 
                 case CSV_MODE:
-                    ROS_INFO("FSM: Entering CSV MODE\n");
-                    break;
+                    if (current_mode == IDLE_MODE) {
+                        ROS_INFO("FSM: Entering CSV MODE\n");
+                        break;
+                    }
+                    continue;
 
                 case WHEEL_MODE:
-                    ROS_INFO("FSM: Entering WHEEL MODE\n");
-                    break;
+                    if (current_mode == IDLE_MODE) {
+                        ROS_INFO("FSM: Entering WHEEL MODE\n");
+                        break;
+                    }
+                    continue;
 
                 case WALK_MODE:
                     for (int i=0; i<4; i++){
@@ -131,16 +146,28 @@ int main(int argc, char **argv) {
                         transform_finished = false;
                         wheel_to_leg_transformer.initialize(init_eta);
                         ROS_INFO("FSM: Transforming From WHEEL To LEG\n");
+                        break;
                     }
-                    else {
+                    else if (current_mode == IDLE_MODE) {
                         walk_gait.initialize(init_eta);
                         ROS_INFO("FSM: Entering WALK MODE\n");
+                        break;
                     }
-                    break;
+                    continue;
 
-                case WLW_MODE:
-                    ROS_INFO("FSM: Entering WLW MODE\n");
-                    break;
+                case STAIR_MODE:
+                    if (current_mode == IDLE_MODE || current_mode == WHEEL_MODE) {
+                        ROS_INFO("FSM: Entering STAIR MODE\n");
+                        for (int i=0; i<4; i++){
+                            init_eta[2*i] = motor_state_modules[i]->theta;
+                            init_eta[2*i+1] = motor_state_modules[i]->beta;
+                        }
+                        transform_finished = false;
+                        wheel_to_leg_transformer.initialize(init_eta);
+                        ROS_INFO("FSM: Transforming From WHEEL To LEG\n");
+                        break;
+                    }
+                    continue;
 
                 default:
                     ROS_WARN("FSM: Unknown Command Received!\n");
@@ -153,7 +180,7 @@ int main(int argc, char **argv) {
         
         // update
         switch (current_mode) {
-            case REST_MODE:
+            case IDLE_MODE:
                 break;
 
             case CSV_MODE:
@@ -201,6 +228,40 @@ int main(int argc, char **argv) {
                 break;
 
             case WLW_MODE:
+                break;
+
+            case STAIR_MODE:
+                if (!transform_finished){
+                    eta_list = wheel_to_leg_transformer.step();
+
+                    if (wheel_to_leg_transformer.transform_finished) {
+                        for (int i=0; i<4; i++){
+                            init_eta[2*i] = motor_state_modules[i]->theta;
+                            init_eta[2*i+1] = motor_state_modules[i]->beta;
+                        }
+
+                        walk_gait.initialize(init_eta);
+                        transform_finished = true;
+                        
+                        ROS_INFO("FSM: Entering WALK MODE\n");
+                    }
+                }
+                else{
+                    eta_list = walk_gait.step();
+                }
+
+                for (int i=0; i<4; i++) {
+                    if (eta_list[0][i] > M_PI*159.9/180.0) {
+                        ROS_INFO("Exceed Upper Bound.\n");
+                        eta_list[0][i] = M_PI*159.9/180.0;
+                    }
+                    if (eta_list[0][i] < M_PI*16.9/180.0) {
+                        ROS_INFO("Exceed Lower Bound.\n");
+                        eta_list[0][i] = M_PI*16.9/180.0;
+                    }
+                    motor_cmd_modules[i]->theta = eta_list[0][i];
+                    motor_cmd_modules[i]->beta = (i == 1 || i == 2) ? eta_list[1][i] : -eta_list[1][i];
+                }
                 break;
 
             default:
