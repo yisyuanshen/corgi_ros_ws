@@ -87,7 +87,7 @@ void WalkGait::initialize(double init_eta[8]) {
 
 std::array<std::array<double, 4>, 2> WalkGait::step() {
     for (int i=0; i<4; i++) {
-        next_hip[i][0] += dS;
+        next_hip[i][0] += dS + sign_diff[i]*diff_dS;
         duty[i] += incre_duty;
     }//end for 
     for (int i=0; i<4; i++) {
@@ -98,16 +98,18 @@ std::array<std::array<double, 4>, 2> WalkGait::step() {
         /* Calculate next foothold if entering swing phase */
         if ((duty[i] > (1 - swing_time)) && swing_phase[i] == 0) {
             swing_phase[i] = 1;
-            if (change_incre_duty) {    // change incre duty corresponding to new step length when hind leg start to swing (after first front leg have adjusted to the new step length)
-                incre_duty = dS / step_length;
-                change_incre_duty = false;
-            }//end if
-            if ( ((direction == 1) && (i==0 || i==1)) || ((direction == -1) && (i==2 || i==3)) ) {  // change to new step length when front leg start to swing
-                foothold[i] = {next_hip[i][0] + direction*((1-swing_time)/2)*new_step_length + direction*(swing_time)*step_length, 0};
-                step_length = new_step_length;
-                change_incre_duty = true;
-            } else {
-                foothold[i] = {next_hip[i][0] + direction*((1-swing_time)/2+swing_time)*step_length, 0};
+            // change to new step length when front leg start to swing
+            if ( ((direction == 1) && (i==0 || i==1)) || ((direction == -1) && (i==2 || i==3)) ) {  // front leg swing
+                // apply new step length and differential
+                foothold[i] = {next_hip[i][0] + direction*((1-swing_time)/2)*(new_step_length + sign_diff[i]*new_diff_step_length) + direction*(swing_time)*(step_length + sign_diff[i]*diff_step_length), 0};
+                next_step_length[i] = new_step_length;   
+                diff_step_length = new_diff_step_length;
+            } else {    // hind leg swing
+                int last_leg = (i+2) % 4;   // Contralateral front leg
+                step_length = current_step_length[last_leg];    // apply step length corresponding to the front leg's.
+                next_step_length[i] = step_length;
+                foothold[i] = {next_hip[i][0] + direction*((1-swing_time)/2+swing_time)*(step_length + sign_diff[i]*diff_step_length), 0};
+                incre_duty = dS / step_length;  // change incre_duty corresponding to new step length when hind leg start to swing.
             }//end if else
             /* Bezier curve setup */
             leg_model.forward(theta[i], beta[i]);
@@ -140,8 +142,16 @@ std::array<std::array<double, 4>, 2> WalkGait::step() {
         } else if ( (direction == 1) && (duty[i] > 1.0)) {                  // entering stance phase when velocirty > 0
             swing_phase[i] = 0;
             duty[i] -= 1.0; // Keep duty in the range [0, 1]
+            if (sp[i].getDirection() == direction){
+                step_count[i] += 1;
+                current_step_length[i] = next_step_length[i];   
+            }//end if
         } else if ( (direction == -1) && (duty[i] < (1.0-swing_time))) {    // entering stance phase when velocirty < 0
             swing_phase[i] = 0;
+            if (sp[i].getDirection() == direction){
+                step_count[i] -= 1;
+                current_step_length[i] = next_step_length[i];   
+            }//end if
         }//end if else
         /* Calculate next theta, beta */
         if (swing_phase[i] == 0) { // Stance phase
@@ -164,13 +174,23 @@ std::array<std::array<double, 4>, 2> WalkGait::step() {
 }//end step
 
 void WalkGait::set_velocity(double new_value){
+    if (std::abs(new_value) > 0.5) {
+        throw std::runtime_error("Velocity should not exceed 0.5 m/s.");
+    }//end if
     velocity = new_value;
     dS = velocity / rate;
     incre_duty = dS / step_length;
     direction = velocity>=0? 1 : -1;
+    // change differential dS if the robot is turning
+    if (curvature != 0.0) {
+        diff_dS = dS * (outer_radius - inner_radius) / (outer_radius + inner_radius);  // apply new value immediately
+    }//end if 
 }//end set_velocity
 
 void WalkGait::set_stand_height(double new_value){
+    if (new_value > 0.34 || new_value < 0.16) {
+        throw std::runtime_error("Stand height should be between 0.16 and 0.34.");
+    }//end if
     stand_height = new_value;
     for (int i=0; i<4; i++) {
         next_hip[i][1] = stand_height;
@@ -178,9 +198,54 @@ void WalkGait::set_stand_height(double new_value){
 }//end set_stand_height
 
 void WalkGait::set_step_length(double new_value){
+    if (new_value <= 0.0) {
+        throw std::runtime_error("Step length should be larger than zero.");
+    }//end if
     new_step_length = new_value;
+    // change differential step length if the robot is turning
+    if (curvature != 0.0) {
+        new_diff_step_length = new_step_length * (outer_radius - inner_radius) / (outer_radius + inner_radius);    // apply new value when front leg swing
+    }//end if 
 }//end set_step_length
 
 void WalkGait::set_step_height(double new_value){
+    if (new_value <= 0.0) {
+        throw std::runtime_error("Step height should be larger than zero.");
+    }//end if
     step_height = new_value;
 }//end set_step_height
+
+void WalkGait::set_curvature(double new_value){
+    curvature = new_value;    
+    if (curvature == 0.0) {
+        new_diff_step_length = 0.0;
+        diff_dS = 0.0;
+    } else {
+        double turn_radius = 1.0 / std::abs(curvature);
+        outer_radius = turn_radius + BW/2.0;
+        inner_radius = turn_radius - BW/2.0;
+        /*
+        step_length + d : step_length - d  = outer_radius : inner_radius
+        (step_length - d) * outer_radius = (step_length + d) * inner_radius
+        d * (outer_radius + inner_radius) = step_length * (outer_radius - inner_radius)
+        */
+        new_diff_step_length = new_step_length * (outer_radius - inner_radius) / (outer_radius + inner_radius);    // apply new value when front leg swing
+        diff_dS = dS * (outer_radius - inner_radius) / (outer_radius + inner_radius);  // apply new value immediately
+        // determine increase/decrease of differential according to sign of curvature and left/right leg 
+        if (curvature > 0.0) { // turn left
+            sign_diff[0] = -1;
+            sign_diff[1] = 1;
+            sign_diff[2] = 1;
+            sign_diff[3] = -1;
+        } else { // turn right
+            sign_diff[0] = 1;
+            sign_diff[1] = -1;
+            sign_diff[2] = -1;
+            sign_diff[3] = 1;
+        }//end if else
+    }// end if else
+}//end set_curvature
+
+std::array<int, 4> WalkGait::get_step_count() {
+    return this->step_count;
+}//end get_step_count
