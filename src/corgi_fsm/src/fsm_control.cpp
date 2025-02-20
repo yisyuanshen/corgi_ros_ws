@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
     // user config
     bool sim = true;
     double body_vel = 0.1;
-    double stair_dist = 4;
+    double stair_dist = 2.43;
     double turn_radius = 0;
 
     // initialize
@@ -281,8 +281,12 @@ int main(int argc, char **argv) {
                     }
                 }
                 else if (!stair_arrived) {
-                    walk_gait.set_velocity(body_vel);
+                    std::array<int, 4> step_count = walk_gait.get_step_count();;
 
+                    if (std::accumulate(step_count.begin(), step_count.end(), 0) == step_num_to_stair*4) { walk_gait.set_step_length(0.3); }
+                    else if (std::accumulate(step_count.begin(), step_count.end(), 0) == step_num_to_stair*4+4) { stair_arrived = true; }
+
+                    walk_gait.set_velocity(body_vel);
                     eta_list = walk_gait.step();
                 }
                 else {

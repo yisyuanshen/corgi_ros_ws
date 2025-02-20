@@ -2,6 +2,7 @@
 #define FSM_CONTROL_HPP
 
 #include <iostream>
+#include <numeric>
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 #include "ros/ros.h"
