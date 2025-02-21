@@ -101,15 +101,13 @@ std::array<std::array<double, 4>, 2> WalkGait::step() {
             // change to new step length when front leg start to swing
             if ( ((direction == 1) && (i==0 || i==1)) || ((direction == -1) && (i==2 || i==3)) ) {  // front leg swing
                 // apply new step length and differential
-                foothold[i] = {next_hip[i][0] + direction*((1-swing_time)/2)*(new_step_length + sign_diff[i]*new_diff_step_length) + direction*(swing_time)*(step_length + sign_diff[i]*diff_step_length), 0};
                 next_step_length[i] = new_step_length;   
+                foothold[i] = {next_hip[i][0] + direction*((1-swing_time)/2)*(next_step_length[i] + sign_diff[i]*new_diff_step_length) + direction*(swing_time)*(step_length + sign_diff[i]*diff_step_length), 0};
                 diff_step_length = new_diff_step_length;
             } else {    // hind leg swing
                 int last_leg = (i+2) % 4;   // Contralateral front leg
-                step_length = current_step_length[last_leg];    // apply step length corresponding to the front leg's.
-                next_step_length[i] = step_length;
-                foothold[i] = {next_hip[i][0] + direction*((1-swing_time)/2+swing_time)*(step_length + sign_diff[i]*diff_step_length), 0};
-                incre_duty = dS / step_length;  // change incre_duty corresponding to new step length when hind leg start to swing.
+                next_step_length[i] = current_step_length[last_leg];    // apply hind step length corresponding to the front leg's.
+                foothold[i] = {next_hip[i][0] + direction*((1-swing_time)/2+swing_time)*(next_step_length[i] + sign_diff[i]*diff_step_length), 0};
             }//end if else
             /* Bezier curve setup */
             leg_model.forward(theta[i], beta[i]);
@@ -144,13 +142,17 @@ std::array<std::array<double, 4>, 2> WalkGait::step() {
             duty[i] -= 1.0; // Keep duty in the range [0, 1]
             if (sp[i].getDirection() == direction){
                 step_count[i] += 1;
-                current_step_length[i] = next_step_length[i];   
+                current_step_length[i] = next_step_length[i];  
+                step_length = current_step_length[i];
+                incre_duty = dS / step_length;  // change incre_duty corresponding to new step length when hind leg start to swing.
             }//end if
         } else if ( (direction == -1) && (duty[i] < (1.0-swing_time))) {    // entering stance phase when velocirty < 0
             swing_phase[i] = 0;
             if (sp[i].getDirection() == direction){
                 step_count[i] -= 1;
                 current_step_length[i] = next_step_length[i];   
+                step_length = current_step_length[i];
+                incre_duty = dS / step_length;  // change incre_duty corresponding to new step length when hind leg start to swing.
             }//end if
         }//end if else
         /* Calculate next theta, beta */

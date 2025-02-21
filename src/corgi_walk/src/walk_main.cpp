@@ -53,16 +53,17 @@ int main(int argc, char** argv) {
 
     auto start = std::chrono::high_resolution_clock::now();
     while (ros::ok()) {
-    // for (int count=0; count<200000; count++){
-        velocity = 0.2*cos((count++)/1711.0);
+    // for (int count=0; count<200000; ){
+        count ++;
+        velocity = 0.2*cos(count/1711.0);
         walk_gait.set_velocity(velocity);
-        stand_height = 0.25 + 0.05*cos((count++)/1211.0);
+        stand_height = 0.25 + 0.05*cos(count/1211.0);
         walk_gait.set_stand_height(stand_height);
         step_length = (count++/3311)%2 == 0? 0.3 : 0.1;
         walk_gait.set_step_length(step_length);
         step_height = (count++/2311)%2 == 0? 0.08 : 0.04;
         walk_gait.set_step_height(step_height);
-        curvature = 1.0*sin((count++)/3911.0);
+        curvature = 1.0*sin(count/3911.0);
         walk_gait.set_curvature(curvature);
         eta_list = walk_gait.step();
         // Publish motor commands

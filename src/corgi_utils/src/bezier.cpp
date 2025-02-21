@@ -87,8 +87,10 @@ void SwingProfile::getControlPoints() {
     std::array<double, 2> c4 = c2;
     std::array<double, 2> c5 = {c4[0] + 0.5 * L + dL1 + dL2, c4[1]};
     std::array<double, 2> c6 = c5;
-    std::array<double, 2> c7 = {c5[0], c5[1] + dh};
-    std::array<double, 2> c8 = {c7[0] + 0.5 * L + dL3 + dL4, c7[1]};
+    // std::array<double, 2> c7 = {c5[0], c5[1] + dh};
+    // std::array<double, 2> c8 = {c7[0] + 0.5 * L + dL3 + dL4, c7[1]};
+    std::array<double, 2> c7 = {c5[0] + 0.5 * L + dL3 + dL4, c5[1] + dh};
+    std::array<double, 2> c8 = c7;
     std::array<double, 2> c9 = c8;
     std::array<double, 2> c10 = {c8[0] - dL4, c8[1] - h - dh + diff_h};
     std::array<double, 2> c11 = {c10[0] - dL3, c10[1]};
