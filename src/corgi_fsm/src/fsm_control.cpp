@@ -160,8 +160,8 @@ int main(int argc, char **argv) {
 
                 case WALK_MODE:
                     for (int i=0; i<4; i++){
-                        init_eta[2*i] = motor_state_modules[i]->theta;
-                        init_eta[2*i+1] = motor_state_modules[i]->beta;
+                        init_eta[2*i] = motor_cmd_modules[i]->theta;
+                        init_eta[2*i+1] = motor_cmd_modules[i]->beta;
                     }
                     if (current_mode == WHEEL_MODE) {
                         transform_finished = false;
@@ -190,8 +190,8 @@ int main(int argc, char **argv) {
                     if (current_mode == IDLE_MODE || current_mode == WHEEL_MODE) {
                         ROS_INFO("FSM: Entering STAIR MODE\n");
                         for (int i=0; i<4; i++){
-                            init_eta[2*i] = motor_state_modules[i]->theta;
-                            init_eta[2*i+1] = motor_state_modules[i]->beta;
+                            init_eta[2*i] = motor_cmd_modules[i]->theta;
+                            init_eta[2*i+1] = motor_cmd_modules[i]->beta;
                         }
                         transform_finished = false;
                         wheel_to_leg_transformer.initialize(init_eta);
@@ -302,6 +302,7 @@ int main(int argc, char **argv) {
                         for (int i=0; i<4; i++) {
                             std::cout << "eta_" << i << ": [" << eta_list[0][i] << ", " << eta_list[1][i] << "]" << std::endl;
                         }
+                        std::cout << std::endl;
                         stair_arrived = true;
                     }
 
