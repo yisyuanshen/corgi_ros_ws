@@ -376,7 +376,7 @@ int main(int argc, char **argv) {
 
         loop_count++;
 
-        // rate.sleep();
+        rate.sleep();
     }
 
     ros::shutdown();
