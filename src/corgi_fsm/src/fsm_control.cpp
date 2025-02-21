@@ -22,6 +22,8 @@ int main(int argc, char **argv) {
 
     ROS_INFO("FSM Starts\n");
 
+    bool sim = false;
+
     // ros setup
     ros::init(argc, argv, "corgi_fsm");
 
@@ -50,8 +52,14 @@ int main(int argc, char **argv) {
     for (auto& cmd : motor_cmd_modules){
         cmd->theta = 17/180.0*M_PI;
         cmd->beta = 0;
-        cmd->kp_r = 90;
-        cmd->kp_l = 90;
+        if (sim) {
+            cmd->kp_r = 90;
+            cmd->kp_l = 90;
+        }
+        else {
+            cmd->kp_r = 150;
+            cmd->kp_l = 150;
+        }
         cmd->ki_r = 0;
         cmd->ki_l = 0;
         cmd->kd_r = 1.75;
@@ -59,9 +67,8 @@ int main(int argc, char **argv) {
     }
 
     // user config
-    bool sim = true;
     double body_vel = 0.1;
-    double stair_dist = 2.43;
+    double stair_dist = 2.5;
     double turn_radius = 0;
 
     // initialize
@@ -73,12 +80,16 @@ int main(int argc, char **argv) {
     bool swing_finished = true;
     int step_num_to_stair = 0;
     bool stair_arrived = false;
+    bool stair_csv_loaded = false;
     bool paused = false;
 
     std::array<std::array<double, 4>, 2> eta_list;
 
     double init_eta[8] = {18/180.0*M_PI, 0, 18/180.0*M_PI, 0, 18/180.0*M_PI, 0, 18/180.0*M_PI, 0};
     
+    std::ifstream csv_file;
+    std::string csv_line;
+
     // init walk class
     WalkGait walk_gait(sim, 0.0, 1000);
     walk_gait.initialize(init_eta);
@@ -220,8 +231,8 @@ int main(int argc, char **argv) {
 
                     if (wheel_to_leg_transformer.transform_finished) {
                         for (int i=0; i<4; i++){
-                            init_eta[2*i] = motor_state_modules[i]->theta;
-                            init_eta[2*i+1] = motor_state_modules[i]->beta;
+                            init_eta[2*i] = motor_cmd_modules[i]->theta;
+                            init_eta[2*i+1] = motor_cmd_modules[i]->beta;
                         }
 
                         walk_gait.initialize(init_eta);
@@ -260,19 +271,20 @@ int main(int argc, char **argv) {
 
                     if (wheel_to_leg_transformer.transform_finished) {
                         for (int i=0; i<4; i++){
-                            init_eta[2*i] = motor_state_modules[i]->theta;
-                            init_eta[2*i+1] = motor_state_modules[i]->beta;
+                            init_eta[2*i] = motor_cmd_modules[i]->theta;
+                            init_eta[2*i+1] = motor_cmd_modules[i]->beta;
                         }
 
                         walk_gait.initialize(init_eta);
                         
                         double remaining_dist = stair_dist-wheel_to_leg_transformer.total_move_dist;
-                        step_num_to_stair = int((remaining_dist-0.3)/0.3) + 1;
-                        double step_length = (remaining_dist-0.3) / double(step_num_to_stair);
+                        step_num_to_stair = int((remaining_dist-0.6)/0.3) + 1;
+                        double step_length = (remaining_dist-0.6) / double(step_num_to_stair);
 
                         std::cout << "Step Length: " << step_length << std::endl << std::endl;
                         std::cout << "Step Number: " << step_num_to_stair << std::endl << std::endl;
 
+                        walk_gait.set_step_height(0.08);
                         walk_gait.set_step_length(step_length);
 
                         transform_finished = true;
@@ -283,15 +295,55 @@ int main(int argc, char **argv) {
                 else if (!stair_arrived) {
                     std::array<int, 4> step_count = walk_gait.get_step_count();;
 
-                    if (std::accumulate(step_count.begin(), step_count.end(), 0) == step_num_to_stair*4) { walk_gait.set_step_length(0.3); }
-                    else if (std::accumulate(step_count.begin(), step_count.end(), 0) == step_num_to_stair*4+4) { stair_arrived = true; }
+                    if (std::accumulate(step_count.begin(), step_count.end(), 0) == step_num_to_stair*4-1) {
+                        walk_gait.set_step_length(0.3);
+                    }
+                    else if (std::accumulate(step_count.begin(), step_count.end(), 0) == step_num_to_stair*4+8) {
+                        for (int i=0; i<4; i++) {
+                            std::cout << "eta_" << i << ": [" << eta_list[0][i] << ", " << eta_list[1][i] << "]" << std::endl;
+                        }
+                        stair_arrived = true;
+                    }
 
                     walk_gait.set_velocity(body_vel);
                     eta_list = walk_gait.step();
                 }
+                else if (!stair_csv_loaded) {
+                    std::string csv_file_path;
+                    csv_file_path = std::getenv("HOME");
+                    csv_file_path += "/corgi_ws/corgi_ros_ws/src/corgi_fsm/stair_traj_csv/";
+                    
+                    if (sim && (eta_list[1][0] < 0)) csv_file_path += "walk2stair_stair_l.csv";
+                    else if (sim && (eta_list[1][0] > 0)) csv_file_path += "walk2stair_stair_r.csv";
+                    else if (!sim && (eta_list[1][0] < 0)) csv_file_path += "exp_walk2stair_stair_l.csv";
+                    else if (!sim && (eta_list[1][0] > 0)) csv_file_path += "exp_walk2stair_stair_r.csv";
+                    
+                    csv_file.open(csv_file_path);
+
+                    if (!csv_file.is_open()) {
+                        ROS_INFO("Failed to open the CSV file\n");
+                        return 1;
+                    }
+                    
+                    stair_csv_loaded = true;
+                }
                 else {
-                    rate.sleep();
-                    continue;
+                    if (std::getline(csv_file, csv_line)) {
+                        std::vector<double> columns;
+                        std::stringstream ss(csv_line);
+                        std::string item;
+                        
+                        for (int i=0; i<4; i++){
+                            std::getline(ss, item, ',');
+                            eta_list[0][i] =  std::stod(item);
+        
+                            std::getline(ss, item, ',');
+                            eta_list[1][i] = std::stod(item);
+                        }
+                    }
+                    else {
+                        break;
+                    }
                 }
 
                 for (int i=0; i<4; i++) {
@@ -304,7 +356,8 @@ int main(int argc, char **argv) {
                         eta_list[0][i] = M_PI*16.9/180.0;
                     }
                     motor_cmd_modules[i]->theta = eta_list[0][i];
-                    motor_cmd_modules[i]->beta = (i == 1 || i == 2) ? eta_list[1][i] : -eta_list[1][i];
+                    if (!stair_csv_loaded) motor_cmd_modules[i]->beta = (i == 1 || i == 2) ? eta_list[1][i] : -eta_list[1][i];
+                    else motor_cmd_modules[i]->beta = eta_list[1][i];
                 }
                 break;
 
@@ -323,7 +376,7 @@ int main(int argc, char **argv) {
 
         loop_count++;
 
-        rate.sleep();
+        // rate.sleep();
     }
 
     ros::shutdown();

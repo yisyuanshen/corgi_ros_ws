@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <numeric>
+#include <fstream>
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 #include "ros/ros.h"
