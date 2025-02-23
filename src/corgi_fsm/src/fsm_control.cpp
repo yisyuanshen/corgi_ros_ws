@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
     // user config
     double body_vel = 0.1;
     double stair_dist = 2.5;
-    double turn_radius = 0;
+    double curvature = 0;
 
     // initialize
     LegModel leg_model(sim);
@@ -104,7 +104,7 @@ int main(int argc, char **argv) {
         ros::spinOnce();
 
         body_vel = fsm_cmd.body_vel;
-        turn_radius = fsm_cmd.turn_radius;
+        curvature = fsm_cmd.curvature;
 
         // check if next_mode is changed
         if (fsm_cmd.next_mode != current_mode && transform_finished && swing_finished) {
@@ -243,7 +243,7 @@ int main(int argc, char **argv) {
                 }
                 else{
                     walk_gait.set_velocity(body_vel);
-                    // walk_gait.set_turn_radius(turn_radius);
+                    walk_gait.set_curvature(curvature);
 
                     eta_list = walk_gait.step();
                 }

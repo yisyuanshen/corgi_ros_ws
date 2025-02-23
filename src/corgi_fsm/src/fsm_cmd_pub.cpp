@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
     corgi_msgs::FsmCmdStamped fsm_cmd;
     fsm_cmd.next_mode = IDLE_MODE;
     fsm_cmd.body_vel = 0.1;
-    fsm_cmd.turn_radius = 0;
+    fsm_cmd.curvature = 0;
 
     int loop_count = 0;
     while (ros::ok()) {
@@ -71,14 +71,14 @@ int main(int argc, char **argv) {
                 std::cout << "Body Velocity: " << fsm_cmd.body_vel << std::endl;
                 break;
             case 'a':
-                fsm_cmd.turn_radius += 0.02;
+                fsm_cmd.curvature += 0.1;
                 break;
             case 's':
                 fsm_cmd.body_vel -= 0.01;
                 std::cout << "Body Velocity: " << fsm_cmd.body_vel << std::endl;
                 break;
             case 'd':
-                fsm_cmd.turn_radius -= 0.02;
+                fsm_cmd.curvature -= 0.1;
                 break;
             default:
                 std::cout << "Unrecognized input, using previous settings." << std::endl;
