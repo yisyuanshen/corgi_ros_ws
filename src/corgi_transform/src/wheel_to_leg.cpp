@@ -136,14 +136,12 @@ std::array<std::array<double, 4>, 2> WheelToLegTransformer::step(){
             step_num = (int)hybrid_steps[0];
             step_length = hybrid_steps[1];
 
-            G_p[0] = step_length;
-            G_p[1] = -stance_height+leg_model.r;
-            LF_target_theta = leg_model.inverse(G_p, "G")[0];
-            LF_target_beta = leg_model.inverse(G_p, "G")[1];
-            LF_target_beta = find_smaller_closest_beta(LF_target_beta-body_angle, curr_beta[0]);
-
+            LF_target_beta = find_closest_beta(M_PI/2.0-body_angle, curr_beta[0]+wheel_delta_beta*delta_time_step/3.0);
             LF_delta_beta = (LF_target_beta-curr_beta[0])/delta_time_step;
-            LF_delta_theta = (LF_target_theta-curr_theta[0])/delta_time_step;
+
+            p_lo = {0.1, 0};
+            p_td = {step_length, -stance_height+leg_model.r};
+            sp = SwingProfile(p_lo, p_td, 0, 0);
 
             step_count = 0;
             stage++;
@@ -154,7 +152,15 @@ std::array<std::array<double, 4>, 2> WheelToLegTransformer::step(){
     case 2:  // front transform
         if (step_count < delta_time_step/3.0) { curr_beta[0] += wheel_delta_beta; }
         else if (step_count < delta_time_step*2/3.0) { curr_beta[0] += LF_delta_beta*3 - wheel_delta_beta; }
-        else { curr_theta[0] += LF_delta_theta * 3; }
+        else {
+            curve_point_temp = sp.getFootendPoint((step_count-delta_time_step*2/3.0)/(delta_time_step/3.0));
+            curve_point[0] = curve_point_temp[0];
+            curve_point[1] = curve_point_temp[1];
+
+            swing_eta = leg_model.inverse(curve_point, "G");
+            curr_theta[0] = swing_eta[0];
+            curr_beta[0] = find_closest_beta(swing_eta[1]-body_angle, curr_beta[0]);
+        }
         
         curr_theta[1] += RF_delta_theta;
         curr_beta[1] += RF_delta_beta;
@@ -265,14 +271,12 @@ std::array<std::array<double, 4>, 2> WheelToLegTransformer::step(){
                 last_start_theta = curr_theta[3];
             }
 
-            G_p[0] = last_transform_step_x;
-            G_p[1] = -stance_height+leg_model.r;
-            last_target_theta = leg_model.inverse(G_p, "G")[0];
-            last_target_beta = leg_model.inverse(G_p, "G")[1];
-            last_target_beta = find_smaller_closest_beta(last_target_beta, last_start_beta);
+            last_target_beta = find_closest_beta(M_PI/2.0-body_angle, last_start_beta+wheel_delta_beta*delta_time_step/3.0);
+            last_delta_beta = (last_target_beta-last_start_beta)/delta_time_step;
 
-            last_delta_beta = (last_target_beta-last_start_beta-wheel_delta_beta*delta_time_step*2/3.0)/(delta_time_step/3.0);
-            last_delta_theta = (last_target_theta-last_start_theta)/delta_time_step;
+            p_lo = {0.1, 0};
+            p_td = {last_transform_step_x, -stance_height+leg_model.r};
+            sp = SwingProfile(p_lo, p_td, 0, 0);
 
             step_count = 0;
             stage++;
@@ -321,33 +325,33 @@ std::array<std::array<double, 4>, 2> WheelToLegTransformer::step(){
         if (step_num%2 == 0){
             curr_theta[3] += transform_delta_theta;
             curr_beta[3] += transform_delta_beta;
-            
-            if (step_count < delta_time_step/3.0){
-                curr_beta[2] += wheel_delta_beta;
-            }
-            else if (step_count < delta_time_step*2/3.0){
-                curr_beta[2] += last_delta_beta;
-                curr_theta[2] += last_delta_theta * 3/2.0;
-            }
+
+            if (step_count < delta_time_step/3.0) { curr_beta[2] += wheel_delta_beta; }
+            else if (step_count < delta_time_step*2/3.0) { curr_beta[2] += last_delta_beta*3 - wheel_delta_beta; }
             else {
-                curr_beta[2] += wheel_delta_beta;
-                curr_theta[2] += last_delta_theta * 3/2.0;
+                curve_point_temp = sp.getFootendPoint((step_count-delta_time_step*2/3.0)/(delta_time_step/3.0));
+                curve_point[0] = curve_point_temp[0];
+                curve_point[1] = curve_point_temp[1];
+    
+                swing_eta = leg_model.inverse(curve_point, "G");
+                curr_theta[2] = swing_eta[0];
+                curr_beta[2] = find_closest_beta(swing_eta[1]-body_angle, curr_beta[2]);
             }
         }
         else {
             curr_theta[2] += transform_delta_theta;
             curr_beta[2] += transform_delta_beta;
-            
-            if (step_count < delta_time_step/3.0){
-                curr_beta[3] += wheel_delta_beta;
-            }
-            else if (step_count < delta_time_step*2/3.0){
-                curr_beta[3] += last_delta_beta;
-                curr_theta[3] += last_delta_theta * 3/2.0;
-            }
+
+            if (step_count < delta_time_step/3.0) { curr_beta[3] += wheel_delta_beta; }
+            else if (step_count < delta_time_step*2/3.0) { curr_beta[3] += last_delta_beta*3 - wheel_delta_beta; }
             else {
-                curr_beta[3] += wheel_delta_beta;
-                curr_theta[3] += last_delta_theta * 3/2.0;
+                curve_point_temp = sp.getFootendPoint((step_count-delta_time_step*2/3.0)/(delta_time_step/3.0));
+                curve_point[0] = curve_point_temp[0];
+                curve_point[1] = curve_point_temp[1];
+    
+                swing_eta = leg_model.inverse(curve_point, "G");
+                curr_theta[3] = swing_eta[0];
+                curr_beta[3] = find_closest_beta(swing_eta[1]-body_angle, curr_beta[3]);
             }
         }
 
