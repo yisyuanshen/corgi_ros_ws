@@ -162,9 +162,14 @@ std::array<std::array<double, 4>, 2> WheelToLegTransformer::step(){
             curr_beta[0] = find_closest_beta(swing_eta[1]-body_angle, curr_beta[0]);
         }
         
-        curr_theta[1] += RF_delta_theta;
-        curr_beta[1] += RF_delta_beta;
-        
+        if (step_count < delta_time_step*2/3.0) {
+            curr_theta[1] += RF_delta_theta*1.5;
+            curr_beta[1] += RF_delta_beta;
+        }
+        else {
+            curr_beta[1] += RF_delta_beta;
+        }
+
         curr_beta[2] += wheel_delta_beta;
         curr_beta[3] += wheel_delta_beta;
         
@@ -323,8 +328,13 @@ std::array<std::array<double, 4>, 2> WheelToLegTransformer::step(){
         curr_beta[1] = RF_target_beta;
         
         if (step_num%2 == 0){
-            curr_theta[3] += transform_delta_theta;
-            curr_beta[3] += transform_delta_beta;
+            if (step_count < delta_time_step*2/3.0) {
+                curr_theta[3] += transform_delta_theta*1.5;
+                curr_beta[3] += transform_delta_beta;
+            }
+            else {
+                curr_beta[3] += transform_delta_beta;
+            }
 
             if (step_count < delta_time_step/3.0) { curr_beta[2] += wheel_delta_beta; }
             else if (step_count < delta_time_step*2/3.0) { curr_beta[2] += last_delta_beta*3 - wheel_delta_beta; }
@@ -339,8 +349,13 @@ std::array<std::array<double, 4>, 2> WheelToLegTransformer::step(){
             }
         }
         else {
-            curr_theta[2] += transform_delta_theta;
-            curr_beta[2] += transform_delta_beta;
+            if (step_count < delta_time_step*2/3.0) {
+                curr_theta[2] += transform_delta_theta*1.5;
+                curr_beta[2] += transform_delta_beta;
+            }
+            else {
+                curr_beta[2] += transform_delta_beta;
+            }
 
             if (step_count < delta_time_step/3.0) { curr_beta[3] += wheel_delta_beta; }
             else if (step_count < delta_time_step*2/3.0) { curr_beta[3] += last_delta_beta*3 - wheel_delta_beta; }
