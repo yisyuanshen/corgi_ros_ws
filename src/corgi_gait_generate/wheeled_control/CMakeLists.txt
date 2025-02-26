@@ -49,4 +49,5 @@ add_subdirectory(src)
 
 add_library(${PROJECT_NAME}
   src/joystick_control.cpp
+  src/wheeled.cpp
 )

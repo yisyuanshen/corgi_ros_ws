@@ -35,11 +35,10 @@ StatePublisher::StatePublisher()
   // Load parameters or use defaults
   ros::NodeHandle pnh("~");
   pnh.param("button_b",  button_b_,  1);
-  pnh.param("button_y",  button_y_,  3);
   pnh.param("button_rb", button_rb_, 5);
 
   // Advertise SteeringState and debug_info
-  steering_state_pub_ = nh_.advertise<corgi_msgs::SteeringStateStamped>("steering_state", 1);
+  steering_state_pub_ = nh_.advertise<corgi_msgs::SteeringStateStamped>("/steer/state", 1);
   debug_pub_ = nh_.advertise<std_msgs::String>("debug_info", 10);
 
   // Subscribe to joystick
@@ -53,17 +52,17 @@ StatePublisher::StatePublisher()
 
   // Publish an initial debug message
   std_msgs::String dbg;
-  dbg.data = "[StatePublisher] Initialized. Listening for B/Y/RB presses.";
+  dbg.data = "[StatePublisher] Initialized. Listening for B/RB presses.";
   debug_pub_.publish(dbg);
 }
 
 void StatePublisher::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 {
   // Check we have enough buttons
-  if (joy->buttons.size() <= std::max({button_b_, button_y_, button_rb_}))
+  if (joy->buttons.size() <= std::max({button_b_, button_rb_}))
   {
     std_msgs::String dbg;
-    dbg.data = "[StatePublisher] Not enough joystick buttons for B/Y/RB!";
+    dbg.data = "[StatePublisher] Not enough joystick buttons for B/RB!";
     debug_pub_.publish(dbg);
     return;
   }
@@ -76,19 +75,7 @@ void StatePublisher::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
     steering_state_pub_.publish(current_steering_state_);
 
     std_msgs::String dbg;
-    dbg.data = "[StatePublisher] B pressed => set current_state=2";
-    debug_pub_.publish(dbg);
-  }
-
-  // Press Y => set current_state=1
-  if (joy->buttons[button_y_] == 1)
-  {
-    current_steering_state_.current_state = false;
-    current_steering_state_.header.stamp = ros::Time::now();
-    steering_state_pub_.publish(current_steering_state_);
-
-    std_msgs::String dbg;
-    dbg.data = "[StatePublisher] Y pressed => set current_state=1";
+    dbg.data = "[StatePublisher] B pressed => set current_state = true";
     debug_pub_.publish(dbg);
   }
 
