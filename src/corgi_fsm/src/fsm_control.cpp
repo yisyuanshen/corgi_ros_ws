@@ -5,7 +5,7 @@
 #include "wheel_to_leg.hpp"
 
 #include "joystick_control.hpp"
-// #include "wheeled.hpp"
+
 
 corgi_msgs::MotorCmdStamped motor_cmd;
 corgi_msgs::MotorStateStamped motor_state;
@@ -21,14 +21,17 @@ void motor_state_cb(const corgi_msgs::MotorStateStamped state){
 void fsm_cmd_cb(const corgi_msgs::FsmCmdStamped cmd){
     fsm_cmd = cmd;
 }
+
 void wheelCmdCallback(const corgi_msgs::WheelCmd::ConstPtr& msg)
 {
     current_wheel_cmd_ = *msg;
 }
+
 void steerStateCallback(const corgi_msgs::SteeringCmdStamped::ConstPtr& msg)
 {
     current_steer_cmd_ = *msg;
 }
+
 int main(int argc, char **argv) {
 
     ROS_INFO("FSM Starts\n");
@@ -70,15 +73,19 @@ int main(int argc, char **argv) {
         if (sim) {
             cmd->kp_r = 90;
             cmd->kp_l = 90;
+            cmd->ki_r = 0;
+            cmd->ki_l = 0;
+            cmd->kd_r = 0.75;
+            cmd->kd_l = 0.75;
         }
         else {
             cmd->kp_r = 150;
             cmd->kp_l = 150;
+            cmd->ki_r = 0;
+            cmd->ki_l = 0;
+            cmd->kd_r = 1.75;
+            cmd->kd_l = 1.75;
         }
-        cmd->ki_r = 0;
-        cmd->ki_l = 0;
-        cmd->kd_r = 1.75;
-        cmd->kd_l = 1.75;
     }
 
     // user config
@@ -112,7 +119,6 @@ int main(int argc, char **argv) {
     // init wheel to leg class
     WheelToLegTransformer wheel_to_leg_transformer(sim);
     wheel_to_leg_transformer.initialize(init_eta);
-
 
     JoystickControl node;
     
@@ -186,20 +192,20 @@ int main(int argc, char **argv) {
                         ROS_INFO("FSM: Transforming From WHEEL To LEG\n");
                         break;
                     }
-                    else if (current_mode == IDLE_MODE) {
-                        walk_gait.initialize(init_eta);
+                    // else if (current_mode == IDLE_MODE) {
+                    //     walk_gait.initialize(init_eta);
 
-                        ROS_INFO("FSM: Entering WALK MODE\n");
-                        break;
-                    }
+                    //     ROS_INFO("FSM: Entering WALK MODE\n");
+                    //     break;
+                    // }
                     rate.sleep();
                     continue;
 
                 case WLW_MODE:
-                    if (current_mode == IDLE_MODE) {
-                        ROS_INFO("FSM: Entering WLW MODE\n");
-                        break;
-                    }
+                    // if (current_mode == IDLE_MODE) {
+                    //     ROS_INFO("FSM: Entering WLW MODE\n");
+                    //     break;
+                    // }
                     rate.sleep();
                     continue;
 

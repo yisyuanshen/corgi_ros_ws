@@ -1,0 +1,5 @@
+<launch>
+    <node name="fsm_control" pkg="corgi_fsm" type="fsm_control" output="screen"/>
+    <node pkg="joy" type="joy_node" name="joy_node" output="screen"/>
+    <node pkg="wheeled_control" type="joystick_control" name="joystick_control" output="screen"/>
+</launch>

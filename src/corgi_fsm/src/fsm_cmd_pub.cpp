@@ -64,6 +64,7 @@ int main(int argc, char **argv) {
                 break;
             case 't':
                 fsm_cmd.stop = true;
+                break;
             case 'q':
                 return 0;
             case 'w':

@@ -8,4 +8,6 @@
     <node name="corgi_data_recorder" pkg="corgi_data_recorder" type="corgi_data_recorder"/>
     <node name="corgi_sim_trq" pkg="corgi_sim" type="corgi_sim_trq" respawn="true" output="screen"/>
     <node name="fsm_control" pkg="corgi_fsm" type="fsm_control" output="screen"/>
+    <node pkg="joy" type="joy_node" name="joy_node" output="screen"/>
+    <node pkg="wheeled_control" type="joystick_control" name="joystick_control" output="screen"/>
 </launch>
