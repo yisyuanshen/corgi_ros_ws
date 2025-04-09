@@ -1,7 +1,7 @@
 <launch>
     <param name="use_sim_time" value="true" />
     
-    <arg name="world" default="$(find corgi_sim)/worlds/corgi_old_proto.wbt"/>  <!--leg_old_proto || corgi_old_proto-->
+    <arg name="world" default="$(find corgi_sim)/worlds/leg_old_proto.wbt"/>  <!--leg_old_proto || corgi_old_proto-->
     <arg name="mode" default="realtime"/>  <!--realtime || pause || fast-->
 
     <node name="webots_launcher" pkg="corgi_sim" type="webots_launcher.py" args="--world=$(arg world) --mode=$(arg mode)" required="true"/>
