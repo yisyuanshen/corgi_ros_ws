@@ -23,6 +23,7 @@ set(CATKIN_PACKAGE_DEPENDENCIES
 )
 
 find_package(OpenMP QUIET)
+find_package(OpenCV REQUIRED)
 if (OpenMP_FOUND)
   add_compile_options("${OpenMP_CXX_FLAGS}")
   add_definitions(-DGRID_MAP_PCL_OPENMP_FOUND=${OpenMP_FOUND})
@@ -116,6 +117,7 @@ target_include_directories(grid_map_pcl_loader_node SYSTEM PUBLIC
 target_link_libraries(grid_map_pcl_loader_node
   ${PROJECT_NAME}
   ${catkin_LIBRARIES}
+  ${OpenCV_LIBRARIES}
 )
 
 add_executable(pointcloud_publisher_node
@@ -134,6 +136,7 @@ target_include_directories(pointcloud_publisher_node SYSTEM PUBLIC
 target_link_libraries(pointcloud_publisher_node
   ${PROJECT_NAME}
   ${catkin_LIBRARIES}
+  ${OpenCV_LIBRARIES}
 )
 
 #############
