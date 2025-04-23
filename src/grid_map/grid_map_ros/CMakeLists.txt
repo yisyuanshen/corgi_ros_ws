@@ -21,7 +21,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   visualization_msgs
 )
-
+find_package(OpenCV REQUIRED)
 ## System dependencies are found with CMake's conventions
 #find_package(Eigen3 REQUIRED)
 
@@ -53,7 +53,7 @@ catkin_package(
     rosbag
     tf
     visualization_msgs
-  DEPENDS
+    DEPENDS OpenCV  
 )
 
 ###########
@@ -77,6 +77,7 @@ add_library(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
+  ${OpenCV_LIBRARIES} 
 )
 
 add_dependencies(${PROJECT_NAME}
