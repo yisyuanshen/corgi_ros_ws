@@ -24,6 +24,7 @@ set(CATKIN_PACKAGE_DEPENDENCIES
 
 find_package(OpenMP QUIET)
 find_package(OpenCV REQUIRED)
+find_package(yaml-cpp REQUIRED) 
 if (OpenMP_FOUND)
   add_compile_options("${OpenMP_CXX_FLAGS}")
   add_definitions(-DGRID_MAP_PCL_OPENMP_FOUND=${OpenMP_FOUND})
@@ -46,15 +47,7 @@ find_package(catkin REQUIRED
     ${CATKIN_PACKAGE_DEPENDENCIES}
 )
 
-###################################
-## catkin specific configuration ##
-###################################
-## The catkin_package macro generates cmake config files for your package
-## Declare things to be passed to dependent projects
-## INCLUDE_DIRS: uncomment this if you package contains header files
-## LIBRARIES: libraries you create in this project that dependent projects also need
-## CATKIN_DEPENDS: catkin_packages dependent projects also need
-## DEPENDS: system dependencies of this project that dependent projects also need
+
 catkin_package(
   INCLUDE_DIRS
     include
@@ -63,8 +56,9 @@ catkin_package(
     yaml-cpp
   CATKIN_DEPENDS
     ${CATKIN_PACKAGE_DEPENDENCIES}
-  DEPENDS
-    PCL
+  DEPENDS  
+  PCL   
+  yaml-cpp
 )
 
 ###########
