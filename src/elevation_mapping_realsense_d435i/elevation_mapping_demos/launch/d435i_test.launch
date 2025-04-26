@@ -1,0 +1,27 @@
+<launch>
+
+  <remap from="/elevation_mapping/map"  to="/elevation_mapping/elevation_map"/>
+  <remap from="/elevation_mapping/map_raw"  to="/elevation_mapping/elevation_map_raw"/>
+  <remap from="/elevation_mapping/map_clean" to="/elevation_mapping/visibility_cleanup_map"/>
+
+  <!-- for d435i online -->
+
+  <!-- <node name="tf_map_base_cam_node" pkg="elevation_mapping_demos" type="tf_map_base_cam_publisher.py" output="screen"/> -->
+  <node pkg="tf" type="static_transform_publisher" name="map_to_base" args=" 0 0 0    0 0 0 1    map    base_link    100" />
+  <node pkg="tf" type="static_transform_publisher" name="base_to_cam" args=" 0 0 0    0 0 0 1    base_link    camera_link    100" />
+
+  <!-- Elevation mapping node -->
+  <node pkg="elevation_mapping" type="elevation_mapping" name="elevation_mapping" output="screen">
+    <rosparam command="load" file="$(find elevation_mapping_demos)/config/robots/d435i_test_robot.yaml" />
+    <rosparam command="load" file="$(find elevation_mapping_demos)/config/elevation_maps/d435i_test_map.yaml" />
+    <rosparam command="load" file="$(find elevation_mapping)/config/sensor_processors/realsense_d435i.yaml" />
+    <rosparam command="load" file="$(find elevation_mapping_demos)/config/postprocessing/postprocessor_pipeline.yaml" />
+  </node>
+
+  <!-- Launch RViz with the demo configuration -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find elevation_mapping_demos)/rviz/elevation_map_d435i_test.rviz" />
+  <!-- after your elevation_mapping and rviz nodes… --> 
+  <!-- <include file="$(find elevation_mapping_demos)/launch/visualization.launch"></include> -->
+
+
+</launch>

@@ -1,0 +1,16 @@
+input_sources:
+    front: # A name to identify the input source
+      type: pointcloud # Supported types: pointcloud
+      topic: /camera/depth/color/points
+      queue_size: 1
+      publish_on_update: true # Wheter to publish the elevation map after a callback from this source. 
+
+# point_cloud_topic: "/camera/depth/color/points"
+map_frame_id: "map"
+robot_base_frame_id: "base_link"
+robot_pose_with_covariance_topic: ""
+robot_pose_cache_size: 200
+track_point_frame_id: "base_link"
+track_point_x: 0.0
+track_point_y: 0.0
+track_point_z: 0.0
