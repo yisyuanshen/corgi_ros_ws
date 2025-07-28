@@ -727,7 +727,7 @@ void StairClimb::init_swing_next_step(int swing_leg, double front_height, double
     final_theta = result_eta[0];
     final_beta  = result_eta[1];
 
-    this->first_ratio  = is_clockwise? 0.1 : 0.2;   // 0 ~ first_ratio by G vertical up
+    this->first_ratio  = is_clockwise? 0.1 : 0.3;   // 0 ~ first_ratio by G vertical up
     this->second_ratio = is_clockwise? 0.7 : 0.7;   // first_ratio ~ mid_ratio by theta and beta
     this->first_in  = true;
     this->second_in = true;
