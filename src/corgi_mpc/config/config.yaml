@@ -1,15 +1,17 @@
-Q_diagonal: [
-  40,   40,   0,     # roll, pitch, yaw
-  0,    0,    100,   # x, y, z
-  0.01, 0.01, 0,     # ω_x, ω_y, ω_z
-  3,    0,    1,     # v_x, v_y, v_z
-  0                  # additional state
-]
-
+# # real parameters
 # Q_diagonal: [
-#   40,  40,  0,   # roll, pitch, yaw
-#   0,   0,   100,  # x, y, z
-#   0.1, 0.1, 0,   # ω_x, ω_y, ω_z
-#   0,   0,   2,   # v_x, v_y, v_z
-#   0              # additional state
+#   40,   40,   0,     # roll, pitch, yaw
+#   0,    0,    100,   # x, y, z
+#   0.01, 0.01, 0,     # ω_x, ω_y, ω_z
+#   3,    0,    1,     # v_x, v_y, v_z
+#   0                  # additional state
 # ]
+
+# simulation parameters
+Q_diagonal: [
+  40,  40,  0,   # roll, pitch, yaw
+  0,   0,   100,  # x, y, z
+  0.1, 0.1, 0,   # ω_x, ω_y, ω_z
+  0,   0,   2,   # v_x, v_y, v_z
+  0              # additional state
+]

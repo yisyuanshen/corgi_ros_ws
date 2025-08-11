@@ -122,6 +122,16 @@ void signal_handler(int signum) {
     exit(signum);
 }
 
+// add an external trigger callback
+void external_trigger_cb(const corgi_msgs::TriggerStamped::ConstPtr& msg) {
+    trigger.enable = msg->enable;
+    if (!msg->output_filename.empty()) {
+        trigger.output_filename = msg->output_filename;
+    }
+    ROS_INFO("External trigger received: enable=%s, filename=%s", 
+             trigger.enable ? "true" : "false", 
+             trigger.output_filename.c_str());
+}
 
 int main(int argc, char **argv) {
     ROS_INFO("Corgi Simulation Starts\n");
@@ -167,7 +177,9 @@ int main(int argc, char **argv) {
     ros::Publisher imu_pub = nh.advertise<sensor_msgs::Imu>("imu", 1000);
     ros::Publisher trigger_pub = nh.advertise<corgi_msgs::TriggerStamped>("trigger", 1000);
     ros::Publisher sim_data_pub = nh.advertise<corgi_msgs::SimDataStamped>("sim/data", 1000);
-    
+
+    ros::Subscriber external_trigger_sub = nh.subscribe<corgi_msgs::TriggerStamped>("external_trigger", 10, external_trigger_cb);
+
     ros::WallRate rate(1000);
 
     node_value_srv.request.ask = true;
@@ -178,11 +190,17 @@ int main(int argc, char **argv) {
     
     signal(SIGINT, signal_handler);
 
-    trigger.enable = true;
+    trigger.enable = false;
     time_step_srv.request.value = 1;
 
     std::cout << "\nInput the output filename and press Enter to start the simulation: ";
     trigger.output_filename = get_lastest_input();
+
+    ROS_INFO("Filename set to: %s", trigger.output_filename.c_str());
+    ROS_INFO("Use external trigger to control enable/disable:");
+    ROS_INFO("Enable: rostopic pub /external_trigger corgi_msgs/TriggerStamped \"enable: true\"");
+    ROS_INFO("Disable:rostopic pub /external_trigger corgi_msgs/TriggerStamped \"enable: false\"");
+    // Open trigger if enabled
 
     int loop_counter = 0;
     while (ros::ok() && time_step_client.call(time_step_srv)){
