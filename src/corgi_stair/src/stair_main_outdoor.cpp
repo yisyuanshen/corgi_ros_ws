@@ -47,7 +47,7 @@ double getPitchFromTransform(const geometry_msgs::TransformStamped& tf) {
     double roll, pitch, yaw;
     tf2::Matrix3x3(q).getRPY(roll, pitch, yaw);
     // std::cout << "Pitch: " << pitch << " radians" << std::endl;
-    return pitch;  // 這就是繞 Y 軸的旋轉角（弧度）
+    return pitch;
 }//end getPitchFromTransform
 
 
@@ -87,9 +87,8 @@ int main(int argc, char** argv) {
     const std::array<double, 2> CoM_bias = {0.0, 0.0};
     const std::array<double, 3> camera_bias = {-0.01, 0.25, 0.032};   // initial camera position in map frame, (x, y, z)
     const std::array<double, 2> CoM2cemera = {0.32075, 0.099};  // translation from CoM to camera
-    // const std::array<double, 2> CoM2cemera = {0.32075, 0.050};  // translation from CoM to camera
     const int sampling_rate = 1000;
-    const int transform_count = 5*sampling_rate; // 2 second
+    const int transform_count = 5*sampling_rate; // 5 second
     double init_eta[8] = {1.857467698281913, 0.4791102940603915, 1.6046663223045279, 0.12914729012802004, 1.6046663223045279, -0.12914729012802004, 1.857467698281913, -0.4791102940603915};  // stand height 0.25, step length 0.3
     double velocity = 0.1; // velocity for walk gait
     double stand_height = 0.25; // stand height for walk gait
@@ -97,6 +96,7 @@ int main(int argc, char** argv) {
     const double step_height = 0.06; // step height for walk gait
     const double max_step_length = 0.3;
     const double min_step_length = 0.2;
+    const double hip_x = 0.222; // front hip x position in robot frame
 
     /* Initial variable */
     ros::Rate rate(sampling_rate);
@@ -111,19 +111,23 @@ int main(int argc, char** argv) {
     double transform_ratio;
     bool trigger;
     int stair_count;
+    int plane_count;
     int command_count;
     double pitch;
     std::array<double, 2> CoM = {0.0, 0.0}; // CoM position in map frame
     double max_cal_time = 0.0;
-    std::array<int, 4> swing_phase;
-    double hip_x, to_stair_d, to_enter_d;
+    int touchdown_leg;
+    double to_stair_d, to_enter_d;
     std::array<bool, 4> if_contact_edge, last_if_contact_edge;
-    geometry_msgs::TransformStamped initial_camera_transform, camera_transform, last_camera_transform, camera_transform_tmp;
+    geometry_msgs::TransformStamped camera_transform;
     double D_sum, H_sum, last_D_sum;
     std::array<int, 4> step_count;
     double optimal_foothold;
     int min_steps, max_steps;
     bool change_step_length;
+    std::vector<double> H_vector;
+    bool need_new_H;
+    bool add_stair_edge = true; // flag to add stair edge
 
     /* Behavior loop */
     auto start = std::chrono::high_resolution_clock::now();
@@ -145,9 +149,12 @@ int main(int argc, char** argv) {
                 trigger = false;
                 pitch = 0.0;
                 stair_count = 0;
+                plane_count = 0;
                 command_count = 0;
                 D_sum = 0.0;
                 H_sum = 0.0;
+                need_new_H = false;
+                add_stair_edge = true;
                 break;
             case TRANSFORM:
                 transform_ratio += 1.0 / transform_count;
@@ -167,21 +174,7 @@ int main(int argc, char** argv) {
                 /* Get camera pose */
                 if (tfBuffer.canTransform("map", "zedxm_camera_center", ros::Time(0), ros::Duration(0.0))) {
                     try {
-                        camera_transform_tmp = tfBuffer.lookupTransform("map", "zedxm_camera_center", ros::Time(0));
-                        if (!first_camera_pose) {
-                            if (std::abs(camera_transform_tmp.transform.translation.x) < 0.05 && std::abs(camera_transform_tmp.transform.translation.y) < 0.05 && std::abs(camera_transform_tmp.transform.translation.z) < 0.05) {
-                                initial_camera_transform = camera_transform_tmp; // set initial camera pose
-                                camera_transform = camera_transform_tmp; // set camera pose
-                                first_camera_pose = true;
-                            }//end if
-                        } else {
-                            // if (std::abs(camera_transform.transform.translation.x - camera_transform_tmp.transform.translation.x) < 0.1 
-                            //     && std::abs(camera_transform.transform.translation.y - camera_transform_tmp.transform.translation.y) < 0.1 
-                            //     && std::abs(camera_transform.transform.translation.z - camera_transform_tmp.transform.translation.z) < 0.1) {
-                                last_camera_transform = camera_transform; // update camera pose
-                                camera_transform = camera_transform_tmp; // update camera pose
-                            // }//end if
-                        }//end if else
+                        camera_transform = tfBuffer.lookupTransform("map", "zedxm_camera_center", ros::Time(0));
                     }
                     catch (tf2::TransformException &ex) {
                         ROS_WARN_THROTTLE(1.0, "TF lookup failed even after canTransform: %s", ex.what());
@@ -189,12 +182,16 @@ int main(int argc, char** argv) {
                 } else {
                     ROS_WARN_THROTTLE(1.0, "TF not available at this moment");
                 }
+                /* Add H size */
+                if (plane_msg.horizontal.size() >= plane_count+2) {
+                    H_vector.push_back(plane_msg.horizontal[plane_count+1] - plane_msg.horizontal[plane_count]);
+                    plane_count++;
+                }//end if
                 /* Adjust last step length of walk gait */
                 change_step_length = false;
-                hip_x = 0.222; // front hip
                 to_stair_d = hip_x + 100;  // set far from hip if not detect stair
                 optimal_foothold = 0;
-                if (plane_msg.vertical.size() >= 1 && plane_msg.horizontal.size() >= 2) {
+                if (plane_msg.vertical.size() >= 1 && H_vector.size() >= 1) {
                     Eigen::Vector3d camera_position(
                         camera_transform.transform.translation.x,
                         camera_transform.transform.translation.y,
@@ -206,21 +203,20 @@ int main(int argc, char** argv) {
                         plane_msg.v_normal.z
                     );
 
-                    double H = plane_msg.horizontal[1] - plane_msg.horizontal[0];
+                    double H = H_vector[0];
                     optimal_foothold = stair_climb.get_optimal_foothold(H, false);
                     to_stair_d = plane_msg.vertical[0] - camera_position.dot(normal_vec) + CoM2cemera[0]; // distance from robot center to stair edge
-                    // to_stair_d = plane_msg.vertical[0] - camera_transform.transform.translation.x + CoM2cemera[0]; // distance from robot center to stair edge
                     to_enter_d = to_stair_d - hip_x - optimal_foothold -(max_step_length/2); // Remaining distance to the gait change point
                     min_steps = static_cast<int>(std::ceil(to_enter_d / (max_step_length/2)));   // max step length = 30cm
                     max_steps = static_cast<int>(std::floor(to_enter_d / (min_step_length/2)));  // min step length = 20cm 
-                    // std::cout << "to_enter_d: " << to_enter_d << std::endl;
                     if (min_steps <= max_steps) {
                         change_step_length = true;
                         walk_gait.set_step_length(to_enter_d / (min_steps/2.0)); 
                     }
                 }//end if
                 eta_list = walk_gait.step();
-                if (change_step_length && walk_gait.if_touchdown() && (swing_phase[0]==1 || swing_phase[1]==1)) { // walk_gait apply new step_length
+                touchdown_leg = walk_gait.get_touchdown_leg();
+                if (change_step_length && (touchdown_leg == 2 || touchdown_leg == 3)) { // walk_gait apply new step_length
                     std::cout << "step_length:" << to_enter_d / (min_steps/2.0) << std::endl;
                 }
                 CoM[0] += velocity / sampling_rate; // expected CoM x position
@@ -236,13 +232,7 @@ int main(int argc, char** argv) {
                 /* Get camera pose */
                 if (tfBuffer.canTransform("map", "zedxm_camera_center", ros::Time(0), ros::Duration(0.0))) {
                     try {
-                        camera_transform_tmp = tfBuffer.lookupTransform("map", "zedxm_camera_center", ros::Time(0));
-                        // if (std::abs(camera_transform.transform.translation.x - camera_transform_tmp.transform.translation.x) < 0.1 
-                        //     && std::abs(camera_transform.transform.translation.y - camera_transform_tmp.transform.translation.y) < 0.1 
-                        //     && std::abs(camera_transform.transform.translation.z - camera_transform_tmp.transform.translation.z) < 0.1) {
-                            last_camera_transform = camera_transform; // update camera pose
-                            camera_transform = camera_transform_tmp; // update camera pose
-                        // }//end if
+                        camera_transform = tfBuffer.lookupTransform("map", "zedxm_camera_center", ros::Time(0));
                     }
                     catch (tf2::TransformException &ex) {
                         ROS_WARN_THROTTLE(1.0, "TF lookup failed even after canTransform: %s", ex.what());
@@ -250,9 +240,14 @@ int main(int argc, char** argv) {
                 } else {
                     ROS_WARN_THROTTLE(1.0, "TF not available at this moment");
                 }
+                /* Add H size */
+                if (plane_msg.horizontal.size() >= plane_count+2) {
+                    H_vector.push_back(plane_msg.horizontal[plane_count+1] - plane_msg.horizontal[plane_count]);
+                    plane_count++;
+                }//end if
                 /* Add stair edge */
                 if (stair_climb.any_no_stair()) {
-                    if ( (stair_count == 0 || plane_msg.vertical.size() >= stair_count+1) && plane_msg.horizontal.size() >= stair_count+2) {
+                    if ( (plane_msg.vertical.size() >= stair_count+1) && add_stair_edge) {
                         Eigen::Vector3d camera_position(
                             camera_transform.transform.translation.x,
                             camera_transform.transform.translation.y,
@@ -263,36 +258,37 @@ int main(int argc, char** argv) {
                             plane_msg.v_normal.y,
                             plane_msg.v_normal.z
                         );
+
                         double next_edge_x = plane_msg.vertical[stair_count] - camera_position.dot(normal_vec);     // relative to camera
-                        // double next_edge_x = plane_msg.vertical[stair_count] - camera_transform.transform.translation.x;     // relative to camera
-                        // double next_edge_z = plane_msg.horizontal[stair_count+1] - camera_transform.transform.translation.z; // relative to camera
-                        // double real_pitch = - (getPitchFromTransform(camera_transform) - getPitchFromTransform(initial_camera_transform));
                         double real_pitch = pitch;
                         std::cout << "Pitch: " << real_pitch << " radians" << std::endl;
                         double CoM2camera_x = CoM2cemera[0] * std::cos(real_pitch) - CoM2cemera[1] * std::sin(real_pitch);
                         double CoM2camera_z = CoM2cemera[0] * std::sin(real_pitch) + CoM2cemera[1] * std::cos(real_pitch);
-                        // stair_climb.add_stair_edge_CoM(CoM2camera_x + next_edge_x, CoM2camera_z + next_edge_z);
-                        double H = plane_msg.horizontal[stair_count+1] - plane_msg.horizontal[stair_count];
-                        // if (stair_count == 0) {
-                        // if (true) {
-                        //     D = CoM2camera_x + next_edge_x;
-                        //     std::cout << "Stair H: " << H << " m, D: " << D << " m." << std::endl;
-                        // } else {
-                        //     D = plane_msg.vertical[stair_count+1] - plane_msg.vertical[stair_count];
-                        //     std::cout << "Stair H: " << H << " m, D: " << D << " m." << std::endl;
-                        // }//end if else
-                        // D_sum += D;
-                        H_sum += H;
-                        // stair_climb.add_stair_edge(D_sum, H_sum);
+                        
                         last_D_sum = D_sum;  // save last D_sum
                         D_sum = stair_climb.add_stair_edge_CoMx(CoM2camera_x + next_edge_x, H_sum);
                         double D = D_sum - last_D_sum;
                         std::cout << "camera_pose x: " << camera_transform.transform.translation.x << std::endl;
-                        std::cout << "Stair H: " << H << " m, D: " << D << " m." << std::endl;
-                        stair_size_csv << ros::Time::now() << "," << (int)trigger_msg.enable << "," << D << "," << H << "\n";
+                        std::cout << "Stair D: " << D << " m." << std::endl;
+                        stair_size_csv << ros::Time::now() << "," << (int)trigger_msg.enable << "," << D << ",";
                         stair_count++;
+                        need_new_H = true; // need to add new stair edge height
+                    } else {
+                        add_stair_edge = false; // no more stair edge to add
+                    }//end if else
+                }//end if
+
+                if (need_new_H) {
+                    if ( H_vector.size() >= stair_count) {
+                        double next_edge_H = H_vector[stair_count-1];
+                        H_sum += next_edge_H;
+                        stair_climb.modify_last_edge_H(H_sum);
+                        std::cout << "Stair H: " << next_edge_H << " m." << std::endl;
+                        stair_size_csv << next_edge_H << "\n";
+                        need_new_H = false;
                     }//end if
                 }//end if
+
                 eta_list = stair_climb.step();
                 pitch = stair_climb.get_pitch();
                 CoM = stair_climb.get_CoM();
@@ -331,8 +327,8 @@ int main(int argc, char** argv) {
                 break;
             case WALK:
                 // Entering stair climbing phase
-                swing_phase = walk_gait.get_swing_phase();
-                if (walk_gait.if_touchdown() && (swing_phase[0]==1 || swing_phase[1]==1)) { // hind leg touched down (front leg start to swing)
+                touchdown_leg = walk_gait.get_touchdown_leg();
+                if (touchdown_leg == 2 || touchdown_leg == 3) { // hind leg touched down (front leg start to swing)
                     if (hip_x + (max_step_length/2) >= to_stair_d - optimal_foothold) {   // max next foothold >= keep_stair_d_front_max, to swing up stair
                         state = STAIR;
                         std::cout << "Enter stair climbing phase." << std::endl;

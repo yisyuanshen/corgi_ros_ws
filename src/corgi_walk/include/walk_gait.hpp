@@ -28,6 +28,7 @@ class WalkGait {
         std::array<int, 4> get_swing_phase();
         std::array<double, 4> get_duty();
         bool if_touchdown();
+        int get_touchdown_leg();
 
     private:
         LegModel leg_model;
@@ -63,7 +64,7 @@ class WalkGait {
         std::array<double, 4> next_step_length    = {step_length, step_length, step_length, step_length};
         double new_step_length = step_length;
         int direction = 1;
-        bool touchdown;
+        int touchdown;
 
         // Intermediate variables
         int current_rim;

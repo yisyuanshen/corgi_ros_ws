@@ -61,68 +61,9 @@ PlaneDistances PlaneSegmentation::segment_planes(pcl::PointCloud<PointT>::Ptr cl
     this->setInputCloud(cloud);
     this->computeNormals();
     this->group_by_normals();
-    // std::vector<double> h_plane_distances = this->segment_by_distances(centroid_z, h_point_idx);
-    // std::vector<double> v_plane_distances = this->segment_by_distances(-centroid_x, v_point_idx);   // align to +x direction in world frame
     auto [h_plane_distances, h_plane_point_indices] = segment_by_distances(centroid_z, h_point_idx);
     auto [v_plane_distances, v_plane_point_indices] = segment_by_distances(-centroid_x, v_point_idx);
     // std::vector<double> h_plane_distances2 = find_height_by_v_plane(v_plane_distances, v_plane_point_indices);
-
-    // size_t n = std::max(h_plane_distances.size(), h_plane_distances2.size());
-    // std::cout << std::fixed << std::setprecision(4);
-    // std::cout << "Index | h_plane_distances | h_plane_distances2\n";
-    // std::cout << "-----------------------------------------------\n";
-
-    // for (size_t i = 0; i < n; ++i) {
-    //     double v1 = (i < h_plane_distances.size()) ? h_plane_distances[i] : std::numeric_limits<double>::quiet_NaN();
-    //     double v2 = (i < h_plane_distances2.size()) ? h_plane_distances2[i] : std::numeric_limits<double>::quiet_NaN();
-
-    //     std::cout << std::setw(5) << i << " | "
-    //               << std::setw(17) << v1 << " | "
-    //               << std::setw(17) << v2 << "\n";
-    // }
-
-// v_plane_point_indices[i] 是第 i 個垂直平面的點 index 集合
-
-
-    /* Visualize in rviz */
-    // this->visualize_planes();
-    // this->visualize_normal();
-    // this->visualize_normal_in_space();
-    // this->visualize_CubePlanes(h_plane_distances, v_plane_distances);
-
-    
-    // Eigen::Vector3d base_link_pos;
-    // try {
-    //     geometry_msgs::TransformStamped transformStamped = 
-    //         tf_buffer_.lookupTransform("map", "base_link", ros::Time(0), ros::Duration(1.0));
-        
-    //     base_link_pos.x() = transformStamped.transform.translation.x;
-    //     base_link_pos.y() = transformStamped.transform.translation.y;
-    //     base_link_pos.z() = transformStamped.transform.translation.z;
-    // } catch (tf2::TransformException &ex) {
-    //     ROS_WARN("TF error: %s", ex.what());
-    // }
-    // double v_d = base_link_pos.dot(centroid_z);
-    // double h_d = base_link_pos.dot(centroid_x);
-    // for (double& d : h_plane_distances) {
-    //     // d -= v_d;
-    // }
-    // for (double& d : v_plane_distances) {
-    //     // d = -d + h_d;
-    // }
-    
-    // if (h_plane_distances.size() >= 2 && v_plane_distances.size() >= 1) {
-    //     Eigen::Vector3d dir = centroid_z.cross(centroid_x); // 交線方向
-    //     Eigen::Matrix2f A;
-    //     A << centroid_z.x(), centroid_z.z(),
-    //         centroid_x.x(), centroid_x.z();
-    //     Eigen::Vector2d b(h_plane_distances[1], v_plane_distances[0]);
-    //     Eigen::Vector2d xz = A.inverse() * b;
-    //     Eigen::Vector3d p0(xz.x(), 0, xz.y()); // 交線在ground上的投影
-    //     double dist = std::abs(centroid_z.dot(p0) - h_plane_distances[0]) / centroid_z.norm();    // 交線與ground距離
-    //     std::cout << "stair height: " << dist << std::endl;
-    // }
-
 
     return {h_plane_distances, v_plane_distances, centroid_z, -centroid_x};
 }//end segment_planes
@@ -205,8 +146,8 @@ void PlaneSegmentation::group_by_normals() {
 std::pair<std::vector<double>, std::vector<std::vector<int>>> PlaneSegmentation::segment_by_distances(Eigen::Vector3d centroid, const std::vector<int>& indices) {
     const double bin_width = 0.001; // 1mm
     const int one_bin_point_threshold = 100;    // 100 points
-    const int total_point_threshold   = 1000;    // 5000 points
-    const double merge_threshold = 0.03;    // 5cm
+    const int total_point_threshold   = 1000;   // 1000 points
+    const double merge_threshold = 0.03;    // 3cm
 
     /* Calculate distances */
     std::vector<double> distances;
@@ -275,7 +216,6 @@ std::pair<std::vector<double>, std::vector<std::vector<int>>> PlaneSegmentation:
             if (sum_count >= total_point_threshold) {
                 total_counts.push_back(sum_count);
                 mean_distances.push_back(sum_value / sum_count);
-                // mean_distances.push_back(bin_values[max_bin_index] / histogram[max_bin_index]);
                 candidate_plane_indices.push_back(accumulated_indices);
             }//end if
             in_range = false;
@@ -285,7 +225,6 @@ std::pair<std::vector<double>, std::vector<std::vector<int>>> PlaneSegmentation:
         if (sum_count >= total_point_threshold) {
             total_counts.push_back(sum_count);
             mean_distances.push_back(sum_value / sum_count);
-            // mean_distances.push_back(bin_values[max_bin_index] / histogram[max_bin_index]);
             candidate_plane_indices.push_back(accumulated_indices);
         }//end if
         in_range = false;
@@ -300,40 +239,6 @@ std::pair<std::vector<double>, std::vector<std::vector<int>>> PlaneSegmentation:
         histogram_csv << min_val+bin_width*i << ",";
     }
     histogram_csv << "\n";
-
-
-    // std::vector<Eigen::Vector3d> points;
-    // Eigen::Vector3d p_centroid(0, 0, 0);
-    // if (mean_distances.size() >= 1 ) {
-    //     for (int i : indices) {
-    //         const pcl::Normal& n = normals_->points[i];
-    //         if (!std::isnan(n.normal_x) && !std::isnan(n.normal_y) && !std::isnan(n.normal_z)) {
-    //             Eigen::Vector3d position(cloud_->points[i].x,
-    //                                     cloud_->points[i].y,
-    //                                     cloud_->points[i].z);
-    //             double d = centroid.dot(position);  // projective distance
-    //             if (d > mean_distances[0]-bin_width && d < mean_distances[0]+bin_width) {
-    //                 p_centroid += position;
-    //                 points.push_back(position);
-    //             }
-    //         }//end if
-    //     }//end for
-    // }
-    // if (points.size() >= 1) {
-    //     p_centroid /= static_cast<double>(points.size());
-    //     // std::cout << "p_centroid: " << p_centroid << std::endl;
-    //     Eigen::MatrixXf A(points.size(), 3);
-    //     for (size_t i = 0; i < points.size(); ++i) {
-    //         A.row(i) = points[i] - p_centroid;
-    //     }
-    //     Eigen::JacobiSVD<Eigen::MatrixXf> svd(A, Eigen::ComputeThinU | Eigen::ComputeThinV);
-    //     Eigen::Vector3d normal = svd.matrixV().col(2);  // 最小奇異值對應方向（即平面法向）
-    //     std::cout << "before normal: " << centroid << std::endl;
-    //     std::cout << "after  normal: " << normal << std::endl;
-    //     std::cout << "before d: " << mean_distances[0] << std::endl;
-    //     std::cout << "after  d: " << -normal.dot(p_centroid) << std::endl;
-    // }
-
     
     /* Only keep max bin in a range (merge_threshold) */
     std::vector<bool> keep(mean_distances.size(), true);
@@ -360,6 +265,7 @@ std::pair<std::vector<double>, std::vector<std::vector<int>>> PlaneSegmentation:
 
     return {final_distances, final_indices}; // from smalleset to largest
 }//end segment_by_distances
+
 
 std::vector<double> PlaneSegmentation::find_height_by_v_plane(const std::vector<double>& plane_distances, const std::vector<std::vector<int>>& plane_indices) {
     std::vector<double> avg_heights;
@@ -397,6 +303,7 @@ std::vector<double> PlaneSegmentation::find_height_by_v_plane(const std::vector<
 
     return avg_heights;
 }//end find_height_by_v_plane
+
 
 Eigen::Vector3d PlaneSegmentation::computeCentroid(const std::vector<int>& indices) {
     Eigen::Vector3d centroid = Eigen::Vector3d::Zero();
@@ -649,7 +556,8 @@ void PlaneSegmentation::visualize_CubePlanes(const std::vector<double>& h_plane_
     }
 
     plane_pub.publish(marker_array);
-}
+}//end visualize_CubePlanes
+
 
 void PlaneSegmentation::visualize_normal_in_space() {
     pcl::PointCloud<PointT>::Ptr cloud_msg(new pcl::PointCloud<PointT>);
@@ -686,4 +594,4 @@ void PlaneSegmentation::visualize_normal_in_space() {
     sensor_msgs::PointCloud2 output;
     pcl::toROSMsg(*cloud_msg, output);
     normal_pub2.publish(output);
-}
+}//end visualize_normal_in_space

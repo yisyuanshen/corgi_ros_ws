@@ -30,8 +30,6 @@
 #include "plane_tracker.hpp"
 
 
-// static tf2_ros::TransformBroadcaster tf_broadcaster;
-
 PlaneSegmentation* plane_segmentation;
 PlaneDistances plane_distances;
 PlaneTracker plane_tracker;
@@ -62,28 +60,6 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr& msg) {
     plane_msg.v_normal.y = v_normal.y();
     plane_msg.v_normal.z = v_normal.z();
     plane_pub.publish(plane_msg);
-
-    // /* Correct Z axis */
-    // // 這個四元數就是：把 h_normal 轉回 z 軸 的旋轉（姿態偏差）
-    // h_normal = plane_distances.h_normal;
-    // Eigen::Vector3d z_axis = Eigen::Vector3d::UnitZ();
-    // Eigen::Quaterniond q_corr = Eigen::Quaterniond::FromTwoVectors(h_normal, z_axis);
-
-    // geometry_msgs::TransformStamped tf_corr;
-    // tf_corr.header.stamp = ros::Time::now();
-    // tf_corr.header.frame_id = "zedxm_left_camera_frame";
-    // tf_corr.child_frame_id = "zedxm_camera_correct";
-
-    // // 此旋轉會「轉正」camera 的姿態，使其對齊地面方向
-    // tf_corr.transform.translation.x = 0.0;
-    // tf_corr.transform.translation.y = 0.0;
-    // tf_corr.transform.translation.z = 0.0;
-    // tf_corr.transform.rotation.x = q_corr.x();
-    // tf_corr.transform.rotation.y = q_corr.y();
-    // tf_corr.transform.rotation.z = q_corr.z();
-    // tf_corr.transform.rotation.w = q_corr.w();
-
-    // tf_broadcaster.sendTransform(tf_corr);
 }//end cloud_cb
 
 void trigger_cb(const corgi_msgs::TriggerStamped msg) {
@@ -98,10 +74,7 @@ int main(int argc, char** argv) {
     ros::Subscriber trigger_sub = nh.subscribe<corgi_msgs::TriggerStamped>("trigger", 1, trigger_cb);
     tf2_ros::Buffer tfBuffer;
     tf2_ros::TransformListener tfListener(tfBuffer);
-    geometry_msgs::TransformStamped camera_transform, last_camera_transform, camera_transform_tmp;
-    camera_transform.transform.translation.x = 0.0;
-    camera_transform.transform.translation.y = 0.0;
-    camera_transform.transform.translation.z = 0.0;
+    geometry_msgs::TransformStamped camera_transform;
 
     plane_segmentation = new PlaneSegmentation;
     plane_segmentation->init_tf();
@@ -127,13 +100,7 @@ int main(int argc, char** argv) {
         ros::spinOnce();
         if (tfBuffer.canTransform("map", "zedxm_camera_center", ros::Time(0), ros::Duration(0.0))) {
             try {
-                camera_transform_tmp = tfBuffer.lookupTransform("map", "zedxm_camera_center", ros::Time(0));
-                // if (std::abs(camera_transform.transform.translation.x - camera_transform_tmp.transform.translation.x) < 0.1 
-                //     && std::abs(camera_transform.transform.translation.y - camera_transform_tmp.transform.translation.y) < 0.1 
-                //     && std::abs(camera_transform.transform.translation.z - camera_transform_tmp.transform.translation.z) < 0.1) {
-                    last_camera_transform = camera_transform; // update camera pose
-                    camera_transform = camera_transform_tmp; // update camera pose
-                // }//end if
+                camera_transform = tfBuffer.lookupTransform("map", "zedxm_camera_center", ros::Time(0));
             }
             catch (tf2::TransformException &ex) {
                 ROS_WARN_THROTTLE(1.0, "TF lookup failed even after canTransform: %s", ex.what());

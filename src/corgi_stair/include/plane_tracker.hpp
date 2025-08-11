@@ -38,28 +38,18 @@ struct TrackedPlane {
 
 struct TrackedNormal {
     std::deque<Eigen::Vector3d> recent_normals;
-    // int no_update_count = 0;
 
     void add_normal(const Eigen::Vector3d& n, size_t max_size = 5) {
         recent_normals.push_back(n);
         if (recent_normals.size() > max_size)
             recent_normals.pop_front();
-        // no_update_count = 0;  // reset on update
     }
-
-    // void increment_no_update() {
-    //     no_update_count++;
-    // }
 
     Eigen::Vector3d average() const {
         Eigen::Vector3d sum = Eigen::Vector3d::Zero();
         for (const auto& n : recent_normals) sum += n;
         return sum.normalized();
     }
-
-    // bool is_stable(size_t required_count = 5) const {
-    //     return recent_normals.size() >= required_count;
-    // }
 };
 
 struct PlaneTracker {

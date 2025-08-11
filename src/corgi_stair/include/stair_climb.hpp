@@ -39,14 +39,12 @@ class StairClimb {
         void init_move_CoM_stable(int swing_leg);
         bool move_CoM_stable();
         bool slow_to_stop();
-        // void move_CoM_stable_fixed_leg_length();
         void init_swing_same_step(int swing_leg, double front_height, double hind_height);
         bool swing_same_step();
         void init_swing_next_step(int swing_leg, double front_height, double hind_height); 
         bool swing_next_step();
         std::array<double, 2> move_consider_edge(int leg_ID, std::array<double, 2> move_vec);
         std::array<double, 2> move_edge(int leg_ID, std::array<double, 2> contact_p, double contact_alpha, double tol = 1e-4, size_t max_iter = 10);
-        // double objective_edge(double d_x, std::array<double, 2> init_U, std::array<double, 2> contact_p, double contact_alpha);
         std::array<double, 2> objective_edge(const std::array<double, 2>& d_q, const std::array<double, 2>& current_q, std::array<double, 2> contact_p, double contact_alpha);
         bool determine_next_foothold();
         std::array<double, 2> get_foothold(double theta, double beta, bool contact_upper=true, bool contact_lower=true);
@@ -111,12 +109,6 @@ class StairClimb {
         double step_length  = 0.3;
         double step_height  = 0.04; // step height for swing on same step
         double step_height_up  = 0.08; // step height for swing when hip move up
-        double max_theta = 2.7348759382405214;  // rad, corresponding to leg length 0.34
-        double max_length = 0.34;  // rad, corresponding to leg length 0.34
-        // double max_theta = 2.5782087432372753;  // rad, corresponding to leg length 0.33
-        // double max_length = 0.33;  // rad, corresponding to leg length 0.33
-        // double max_theta = 2.448091729331016;  // rad, corresponding to leg length 0.32
-        // double max_length = 0.32;  // rad, corresponding to leg length 0.32
         std::array<SwingProfile, 4> sp;
         int swing_count;
         double vel_incre;   // velocity increment for x velocity of CoM
@@ -131,7 +123,6 @@ class StairClimb {
         std::array<std::array<double, 2>, 4> last_hip;
         double pitch;
         int swing_leg;
-        bool achieve_max_length;
 
         std::vector<StairEdge> stair_edge[4];
         StairEdge last_stair_edge[4];

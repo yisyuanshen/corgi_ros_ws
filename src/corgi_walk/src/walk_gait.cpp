@@ -93,7 +93,7 @@ void WalkGait::initialize(double init_eta[8], double step_length_) {
 }//end initialize
 
 std::array<std::array<double, 4>, 2> WalkGait::step() {
-    touchdown = false;
+    touchdown = -1;
     for (int i=0; i<4; i++) {
         next_hip[i][0] += dS + sign_diff[i]*diff_dS;
         duty[i] += incre_duty;
@@ -155,7 +155,7 @@ std::array<std::array<double, 4>, 2> WalkGait::step() {
             }//end if else
             sp[i] = SwingProfile(p_lo, p_td, step_height, direction);
         } else if ((direction == 1) && (duty[i] > 1.0)) {                  // entering stance phase when velocirty > 0
-            touchdown = true;
+            touchdown = i;
             swing_phase[i] = 0;
             duty[i] -= 1.0; // Keep duty in the range [0, 1]
             if (sp[i].getDirection() == direction){ // if the leg swing a whole swing phase, instead of swing back.
@@ -163,7 +163,7 @@ std::array<std::array<double, 4>, 2> WalkGait::step() {
                 current_step_length[i] = next_step_length[i];  
             }//end if
         } else if ((direction == -1) && (duty[i] < (1.0-swing_time))) {    // entering stance phase when velocirty < 0
-            touchdown = true;
+            touchdown = i;
             swing_phase[i] = 0;
             if (sp[i].getDirection() == direction){ // if the leg swing a whole swing phase, instead of swing back.
                 step_count[i] -= 1;
@@ -290,5 +290,13 @@ std::array<double, 4> WalkGait::get_duty() {
 }//end get_duty
 
 bool WalkGait::if_touchdown() {
-    return this->touchdown;
+    if (this->touchdown == -1) {
+        return false; // No leg is touching down
+    } else {
+        return true; // A leg is touching down
+    }
 }//end if_touchdown
+
+int WalkGait::get_touchdown_leg() {
+    return this->touchdown;
+}//end get_touchdown_leg
