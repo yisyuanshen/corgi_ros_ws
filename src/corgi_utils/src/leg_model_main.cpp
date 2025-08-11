@@ -81,17 +81,5 @@ int main() {
     std::cout << "Use theta = " << new_theta_beta[0] << ", " << "beta = " << new_theta_beta[1] 
             << " allows the leg to roll from (" << hip[0] << ", "  << hip[1] << ") to (" << desired_hip[0] << ", "  << desired_hip[1] << ") along the ground." << std::endl;
     
-
-    // Eigen::VectorXd a(5);
-    // Eigen::VectorXd b(5);
-    // Eigen::VectorXd result(5);
-
-    // // 初始化向量
-    // a << 1.0, 2.0, 3.0, 4.0, 5.0;
-
-    // b << 5.0, 4.0, 3.0, 2.0, 1.0;
-    // a << 5.0, 2.0, 3.0, 4.0, 5.0;
-    // std::cout << a ;
-
     return 0;
 }//end main
