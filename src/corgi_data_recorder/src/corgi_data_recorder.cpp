@@ -143,7 +143,9 @@ void trigger_cb(const corgi_msgs::TriggerStamped msg){
                         << "v_8" << "," << "i_8" << ","
                         << "v_9" << "," << "i_9" << ","
                         << "v_10" << "," << "i_10" << ","
-                        << "v_11" << "," << "i_11"
+                        << "v_11" << "," << "i_11" << ","
+                        
+                        << "sim_dst_lf" << "," << "sim_dst_lh" << "," << "sim_dst_rf" << "," << "sim_dst_rh"
                         << "\n";
 
             ROS_INFO("Recording data to %s\n", output_file_name.c_str());
@@ -276,7 +278,9 @@ void write_data() {
                 << power_state.v_8 << "," << power_state.i_8 << ","
                 << power_state.v_9 << "," << power_state.i_9 << ","
                 << power_state.v_10 << "," << power_state.i_10 << ","
-                << power_state.v_11 << "," << power_state.i_11
+                << power_state.v_11 << "," << power_state.i_11 << ","
+                
+                << sim_data.dst_lf << "," << sim_data.dst_lh << "," << sim_data.dst_rf << "," << sim_data.dst_rh << ","
                 << "\n";
                 
     output_file.flush();

@@ -45,6 +45,11 @@ double CL_phi_dot = 0.0;
 double DR_phi_dot = 0.0;
 double DL_phi_dot = 0.0;
 
+double dst_lf = 0.0;
+double dst_lh = 0.0;
+double dst_rf = 0.0;
+double dst_rh = 0.0;    
+
 corgi_sim::set_float AR_motor_trq_srv;
 corgi_sim::set_float AL_motor_trq_srv;
 corgi_sim::set_float BR_motor_trq_srv;
@@ -76,6 +81,11 @@ void DL_encoder_cb(corgi_sim::Float64Stamped phi) { DL_phi_dot = (phi.data - DL_
 void gyro_cb(sensor_msgs::Imu values) { imu.orientation = values.orientation; }
 void ang_vel_cb(sensor_msgs::Imu values) { imu.angular_velocity = values.angular_velocity; }
 void imu_cb(sensor_msgs::Imu values) { imu.linear_acceleration = values.linear_acceleration; }
+
+void dst_lf_cb(sensor_msgs::Range values) { dst_lf = values.range; }
+void dst_lh_cb(sensor_msgs::Range values) { dst_lh = values.range; }
+void dst_rf_cb(sensor_msgs::Range values) { dst_rf = values.range; }
+void dst_rh_cb(sensor_msgs::Range values) { dst_rh = values.range; }
 
 double find_closest_phi(double phi_ref, double phi_fb) {
     double diff = fmod(phi_ref - phi_fb + M_PI, 2 * M_PI);
@@ -122,7 +132,7 @@ void signal_handler(int signum) {
     exit(signum);
 }
 
-// add an external trigger callback
+// add an external trigger to control the trigger state
 void external_trigger_cb(const corgi_msgs::TriggerStamped::ConstPtr& msg) {
     trigger.enable = msg->enable;
     if (!msg->output_filename.empty()) {
@@ -172,6 +182,11 @@ int main(int argc, char **argv) {
     ros::Subscriber ang_vel_sub = nh.subscribe<sensor_msgs::Imu>("ang_vel/values", 1, ang_vel_cb);
     ros::Subscriber imu_sub = nh.subscribe<sensor_msgs::Imu>("imu/values", 1, imu_cb);
 
+    ros::Subscriber dst_lf_sub = nh.subscribe<sensor_msgs::Range>("dst_lf/value", 1, dst_lf_cb);
+    ros::Subscriber dst_lh_sub = nh.subscribe<sensor_msgs::Range>("dst_lh/value", 1, dst_lh_cb);
+    ros::Subscriber dst_rf_sub = nh.subscribe<sensor_msgs::Range>("dst_rf/value", 1, dst_rf_cb);
+    ros::Subscriber dst_rh_sub = nh.subscribe<sensor_msgs::Range>("dst_rh/value", 1, dst_rh_cb);
+
     ros::Subscriber motor_cmd_sub = nh.subscribe<corgi_msgs::MotorCmdStamped>("motor/command", 1, motor_cmd_cb);
     ros::Publisher motor_state_pub = nh.advertise<corgi_msgs::MotorStateStamped>("motor/state", 1000);
     ros::Publisher imu_pub = nh.advertise<sensor_msgs::Imu>("imu", 1000);
@@ -197,10 +212,9 @@ int main(int argc, char **argv) {
     trigger.output_filename = get_lastest_input();
 
     ROS_INFO("Filename set to: %s", trigger.output_filename.c_str());
-    ROS_INFO("Use external trigger to control enable/disable:");
+    ROS_INFO("Use external trigger to control trigger enable/disable:");
     ROS_INFO("Enable: rostopic pub /external_trigger corgi_msgs/TriggerStamped \"enable: true\"");
     ROS_INFO("Disable:rostopic pub /external_trigger corgi_msgs/TriggerStamped \"enable: false\"");
-    // Open trigger if enabled
 
     int loop_counter = 0;
     while (ros::ok() && time_step_client.call(time_step_srv)){
@@ -212,6 +226,10 @@ int main(int argc, char **argv) {
         sim_data.header.seq = loop_counter;
         sim_data.position = node_pos_srv.response.position;
         sim_data.orientation = node_orien_srv.response.orientation;
+        sim_data.dst_lf = dst_lf;
+        sim_data.dst_lh = dst_lh;
+        sim_data.dst_rf = dst_rf;
+        sim_data.dst_rh = dst_rh;
 
         tb2phi(motor_cmd.module_a, AR_motor_trq_srv.request.value, AL_motor_trq_srv.request.value, AR_phi, AL_phi, AR_phi_dot, AL_phi_dot);
         tb2phi(motor_cmd.module_b, BR_motor_trq_srv.request.value, BL_motor_trq_srv.request.value, BR_phi, BL_phi, BR_phi_dot, BL_phi_dot);
