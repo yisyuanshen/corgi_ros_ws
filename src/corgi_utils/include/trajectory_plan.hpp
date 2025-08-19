@@ -10,6 +10,7 @@ class LinearParaBlend {
     public:
         // Constructor: get parameters of linear function with parabolic blends.
         // p: via point, t: time at each p (0.0~1.0), tp: acceleration time, vi: initial velocity, vf: final velocity
+        LinearParaBlend() {};  // Default constructor
         LinearParaBlend(std::vector<double> p, std::vector<double> t, double tp = 0.2, bool use_vi = true, double vi = 0, bool use_vf = true, double vf = 0);
        
         // Get point at the given time (0.0~1.0) of the function.

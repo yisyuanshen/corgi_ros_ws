@@ -17,7 +17,7 @@ class LegInfo {
         bool one_step;
         bool contact_edge;
         double contact_alpha;
-        int stair;
+        int stair_count;    // the leg is stepping on this stair
 
 };//end class LegInfo
 

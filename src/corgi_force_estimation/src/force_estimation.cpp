@@ -15,12 +15,12 @@ void imu_cb(const sensor_msgs::Imu::ConstPtr &msg){
 }
 
 Eigen::MatrixXd calculate_P_poly(int rim, double alpha){
-    Eigen::Rotation2D<double> rotation(alpha);
-    Eigen::Matrix2d rot_alpha = rotation.toRotationMatrix();
-
     for (int i=0; i<8; i++){
         H_l_coef(0, i) = H_x_coef[i];
         H_l_coef(1, i) = H_y_coef[i];
+
+        H_r_coef(0, i) = -H_x_coef[i];
+        H_r_coef(1, i) = H_y_coef[i];
 
         U_l_coef(0, i) = U_x_coef[i];
         U_l_coef(1, i) = U_y_coef[i];
@@ -48,12 +48,34 @@ Eigen::MatrixXd calculate_P_poly(int rim, double alpha){
 
     double scaled_radius = legmodel.radius / legmodel.R;
 
-    if      (rim == 1) P_poly = rot_alpha * (H_l_coef-U_l_coef) * scaled_radius + U_l_coef;
-    else if (rim == 2) P_poly = rot_alpha * (F_l_coef-L_l_coef) * scaled_radius + L_l_coef;
-    else if (rim == 3) P_poly = G_coef; // * scaled_radius;
-    else if (rim == 4) P_poly = rot_alpha * (G_coef-L_r_coef) * scaled_radius + L_r_coef;
-    else if (rim == 5) P_poly = rot_alpha * (F_r_coef-U_r_coef) * scaled_radius + U_r_coef;
-    else P_poly = Eigen::MatrixXd::Zero(2, 8);
+    if (rim == 1) {
+        Eigen::Rotation2D<double> rotation(alpha+M_PI);
+        Eigen::Matrix2d rot_alpha = rotation.toRotationMatrix();
+        P_poly = rot_alpha * (H_l_coef-U_l_coef) * scaled_radius + U_l_coef;
+    }
+    else if (rim == 2) {
+        Eigen::Rotation2D<double> rotation(alpha);
+        Eigen::Matrix2d rot_alpha = rotation.toRotationMatrix();
+        P_poly = rot_alpha * (G_coef-L_l_coef) * scaled_radius + L_l_coef;
+    }
+    else if (rim == 3) {
+        Eigen::Rotation2D<double> rotation(alpha);
+        Eigen::Matrix2d rot_alpha = rotation.toRotationMatrix();
+        P_poly = rot_alpha * (G_coef-L_l_coef) * legmodel.r / legmodel.R + G_coef;
+    }
+    else if (rim == 4) {
+        Eigen::Rotation2D<double> rotation(alpha);
+        Eigen::Matrix2d rot_alpha = rotation.toRotationMatrix();
+        P_poly = rot_alpha * (G_coef-L_r_coef) * scaled_radius + L_r_coef;
+    }
+    else if (rim == 5) {
+        Eigen::Rotation2D<double> rotation(alpha-M_PI);
+        Eigen::Matrix2d rot_alpha = rotation.toRotationMatrix();
+        P_poly = rot_alpha * (H_r_coef-U_r_coef) * scaled_radius + U_r_coef;
+    }
+    else {
+        P_poly = Eigen::MatrixXd::Zero(2, 8);
+    }
     
     return P_poly;
 }
@@ -100,27 +122,27 @@ Eigen::MatrixXd estimate_force(double theta, double beta, double torque_r, doubl
     Eigen::MatrixXd jacobian(2, 2);
     jacobian = calculate_jacobian(P_theta, P_theta_deriv, beta);
     
-    Eigen::MatrixXd torque(2, 1);
-    torque << torque_r, torque_l;
+    Eigen::MatrixXd force_est(2, 1);
 
-    Eigen::MatrixXd force_est = jacobian.inverse().transpose() * torque;
+    if (jacobian.isZero(1e-6)) {
+        force_est.setZero();
+    } else {
+        Eigen::MatrixXd torque(2, 1);
+        torque << torque_r, torque_l;
+        force_est = jacobian.inverse().transpose() * torque;
+    }
 
     return force_est;
 }
 
-// Function to compute Euler angles from a quaternion using ZYX order.
-void quaternionToEuler(const Eigen::Quaterniond &q, double &roll, double &pitch, double &yaw) {
-    // Normalize the quaternion (if not already normalized)
+void quaternion_to_euler(const Eigen::Quaterniond &q, double &roll, double &pitch, double &yaw) {
     Eigen::Quaterniond q_norm = q.normalized();
 
-    // Calculate roll (x-axis rotation)
     roll = std::atan2(2.0 * (q_norm.w() * q_norm.x() + q_norm.y() * q_norm.z()),
                       1.0 - 2.0 * (q_norm.x() * q_norm.x() + q_norm.y() * q_norm.y()));
 
-    // Calculate pitch (y-axis rotation)
     pitch = std::asin(2.0 * (q_norm.w() * q_norm.y() - q_norm.z() * q_norm.x()));
 
-    // Calculate yaw (z-axis rotation)
     yaw = std::atan2(2.0 * (q_norm.w() * q_norm.z() + q_norm.x() * q_norm.y()),
                      1.0 - 2.0 * (q_norm.y() * q_norm.y() + q_norm.z() * q_norm.z()));
 }
@@ -157,11 +179,52 @@ int main(int argc, char **argv) {
         &force_state.module_d
     };
 
+    std::vector<Eigen::MatrixXd> phi_prev_modules = {
+        Eigen::MatrixXd::Zero(2, 1),
+        Eigen::MatrixXd::Zero(2, 1),
+        Eigen::MatrixXd::Zero(2, 1),
+        Eigen::MatrixXd::Zero(2, 1)
+    };
+
+    double phi_r = 0;
+    double phi_l = 0;
+    
+    // AR, AL, BR, BL, CR, CL, DR, DL
+    // std::vector<double> kt = {2.018, 2.126, 2.141, 2.176, 1.927, 2.072, 2.098, 2.143};
+    std::vector<double> friction = {0.625, 0.44, 0.662, 0.499, 0.623, 0.409, 0.677, 0.356};  // already include kt
+
     while (ros::ok()) {
         ros::spinOnce();
 
         body_angle_quat = {imu.orientation.w, imu.orientation.x, imu.orientation.y, imu.orientation.z};
-        quaternionToEuler(body_angle_quat, roll, pitch, yaw);
+        quaternion_to_euler(body_angle_quat, roll, pitch, yaw);
+
+        if (!sim){
+            pitch *= -1;
+            yaw *= -1;
+
+            // dynamic friction compensation
+            for (int i=0; i<4; i++) {
+                phi_r = motor_state_modules[i]->theta + motor_state_modules[i]->beta - 17/180.0*M_PI;
+                phi_l = motor_state_modules[i]->beta - motor_state_modules[i]->theta + 17/180.0*M_PI;
+
+                if (phi_r > phi_prev_modules[i](0, 0)){
+                    motor_state_modules[i]->torque_r += friction[2*i];
+                }
+                else {
+                    motor_state_modules[i]->torque_r -= friction[2*i];
+                }
+
+                if (phi_l > phi_prev_modules[i](1, 0)){
+                    motor_state_modules[i]->torque_l += friction[2*i+1];
+                }
+                else {
+                    motor_state_modules[i]->torque_l -= friction[2*i+1];
+                }
+
+                phi_prev_modules[i] << phi_r, phi_l;
+            }
+        }
 
         for (int i=0; i<4; i++){
             Eigen::MatrixXd force_est;
@@ -175,8 +238,10 @@ int main(int argc, char **argv) {
                                            motor_state_modules[i]->torque_r, motor_state_modules[i]->torque_l);
             }
 
-            force_state_modules[i]->Fx = force_est(0, 0);
-            force_state_modules[i]->Fy = force_est(1, 0);
+            if (i == 1 || i == 2) { force_state_modules[i]->Fx = -force_est(0, 0); }
+            else { force_state_modules[i]->Fx = force_est(0, 0); }
+            
+            force_state_modules[i]->Fy = -force_est(1, 0)+0.68*9.81;
         }
 
         force_state.header.seq = motor_state.header.seq;

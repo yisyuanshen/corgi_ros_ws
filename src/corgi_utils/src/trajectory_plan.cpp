@@ -49,7 +49,7 @@ LinearParaBlend::LinearParaBlend(std::vector<double> p, std::vector<double> t, d
     for (int i=0; i<n_points-1; i++) {
         function_coeff[2*i + 1] = {0, vel[i + 1], -t[i]*vel[i + 1] + p[i]};    // linear: constant speed
         double tmp = t[i + 1] - 0.5 * tp;    // acceleration start time
-        function_coeff[2*i + 2] = {function_coeff[2*i+1][0] + 0.5*acc[i+1], function_coeff[2*i+1][1] -acc[i+1]*2*tmp, function_coeff[2*i+1][0] + acc[i+1]*tmp*tmp};
+        function_coeff[2*i + 2] = {function_coeff[2*i+1][0] + 0.5*acc[i+1], function_coeff[2*i+1][1] -acc[i+1]*tmp, function_coeff[2*i+1][2] + 0.5*acc[i+1]*tmp*tmp};
     }//end for
 
     // Store p & t

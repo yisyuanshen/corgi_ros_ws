@@ -10,7 +10,7 @@
 LegModel::LegModel(bool sim) : 
     /* Initializer List */
     max_theta(M_PI * 160.0 / 180.0),
-    min_theta(M_PI * 17.0 / 180.0),
+    min_theta(M_PI * 16.9 / 180.0), // 17.0, set 16.9 to alllow floating point error
     theta0(M_PI * 17.0 / 180.0),
     beta0(M_PI * 90.0 / 180.0),
     // Wheel radius
@@ -198,19 +198,20 @@ std::array<double, 3> LegModel::arc_min(const std::complex<double>& p1, const st
         double bias_alpha = 0.0;
 
         if (rim == "left upper") {
-            // bias_alpha = -M_PI;
+            bias_alpha = -M_PI;
         } else if (rim == "left lower") {
-            // bias_alpha = -M_PI / 3.6; // -50 degrees
+            bias_alpha = -M_PI / 3.6; // -50 degrees
         } else if (rim == "G") {
             // std::complex<double> direction_G = p1 + p2;
-            bias_alpha = std::arg((p1 - O) / (p2 - O));
+            // bias_alpha = std::arg((p1 - O) / (p2 - O));
+            bias_alpha = 0.0;
         } else if (rim == "right lower") {
-            // bias_alpha = 0.0;
+            bias_alpha = 0.0;
         } else if (rim == "right upper") {
-            // bias_alpha = M_PI / 3.6; // 50 degrees
+            bias_alpha = M_PI / 3.6; // 50 degrees
         }//end if else
 
-        double cal_err = 1e-9;
+        double cal_err = 1e-4;
         bool in_range = ((p2 - O).real() >= -cal_err) && ((p1 - O).real() <= cal_err);
 
         if (in_range) {
@@ -233,7 +234,7 @@ std::array<double, 3> LegModel::arc_min(const std::complex<double>& p1, const st
 
 // Note: The inverse and move functions require root-finding and numerical methods that are complex to implement.
 // For a complete implementation, you would need to use numerical libraries like Eigen, Ceres Solver, or write custom solvers.
-std::array<double, 2> LegModel::inverse(const double pos[2], const std::string &joint) {
+std::array<double, 2> LegModel::inverse(const std::array<double, 2>& pos, const std::string &joint) {
     using namespace std::complex_literals;
     double abs_pos = std::sqrt(pos[0]*pos[0] + pos[1]*pos[1]);
     if (joint == "G"){
@@ -325,7 +326,8 @@ std::array<double, 2> LegModel::move(double theta_in, double beta_in, std::array
         guess_dq[1] += dq[1];
 
         if (iter == max_iter-1) {
-            throw std::runtime_error("Newton solver did not converge.");
+            // throw std::runtime_error("Newton solver did not converge.");
+            std::cout << "LegModel::move: Newton solver cost " << norm_cost << std::endl;
         }//end if
     }//end for
 

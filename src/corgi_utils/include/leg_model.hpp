@@ -13,8 +13,11 @@ class LegModel {
         void forward(double theta, double beta, bool vector = true);
 
         // Inverse kinematics
-        std::array<double, 2> inverse(const double pos[2], const std::string &joint = "G");
-
+        std::array<double, 2> inverse(const std::array<double, 2> &pos, const std::string &joint = "G");
+        std::array<double, 2> inverse(const double pos[2], const std::string &joint = "G") {
+            return inverse(std::array<double, 2>{pos[0], pos[1]}, joint);
+        }
+        
         // Contact map
         void contact_map(double theta_in, double beta_in, double slope=0.0, bool contact_upper=true, bool contact_lower=true);
 

@@ -8,6 +8,7 @@
 #include <vector>
 #include <map>
 #include <Eigen/Dense>
+#include <sys/stat.h>
 
 namespace DataProcessor
 {
@@ -110,6 +111,10 @@ namespace DataProcessor
     }
     class CsvLogger {
     public:
+        std::ofstream outFile;
+
+        bool init = false;
+
         CsvLogger() = default;
         
         // Destructor makes sure the file is closed.
@@ -144,6 +149,7 @@ namespace DataProcessor
             }
             outFile << "\n";
             outFile.flush();  // make sure header is written immediately
+            init = true;
             return true;
         }
         
@@ -178,10 +184,14 @@ namespace DataProcessor
                 outFile.close();
             }
         }
+
+        bool file_exists(const std::string &filename) {
+            struct stat buffer;
+            return (stat(filename.c_str(), &buffer) == 0);
+        }
         
     private:
         std::string filename;
-        std::ofstream outFile;
     };
 } // namespace DataProcessor
 

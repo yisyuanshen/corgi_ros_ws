@@ -30,6 +30,9 @@ add_message_files(
   IMUStamped.msg
   FsmCmdStamped.msg
   FsmStateStamped.msg
+  ContactState.msg
+  ContactStateStamped.msg
+  StairPlanes.msg
 )
 
 add_service_files(

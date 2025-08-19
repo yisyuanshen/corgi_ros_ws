@@ -26,7 +26,15 @@
   <build_export_depend>message_runtime</build_export_depend>
   <build_export_depend>corgi_utils</build_export_depend>
   <build_export_depend>corgi_walk</build_export_depend>
-
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>visualization_msgs</build_depend>
+  <build_depend>tf2_ros</build_depend>
+  <build_depend>tf2_eigen</build_depend>
+  <build_depend>pcl_ros</build_depend>
+  <build_depend>pcl_conversions</build_depend>
+  <build_depend>pcl_msgs</build_depend>
+  <build_depend>eigen</build_depend>
+  
   <exec_depend>corgi_msgs</exec_depend>
   <exec_depend>roscpp</exec_depend>
   <exec_depend>rospy</exec_depend>
@@ -37,6 +45,14 @@
   <exec_depend>message_generation</exec_depend>
   <exec_depend>corgi_utils</exec_depend>
   <exec_depend>corgi_walk</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>visualization_msgs</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>tf2_eigen</exec_depend>
+  <exec_depend>pcl_ros</exec_depend>
+  <exec_depend>pcl_conversions</exec_depend>
+  <exec_depend>pcl_msgs</exec_depend>
+  <exec_depend>eigen</exec_depend>
 
   <export>
 

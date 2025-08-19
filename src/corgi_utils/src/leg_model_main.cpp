@@ -40,7 +40,7 @@ int main() {
     std::cout << "****************************************" << std::endl;
     // inverse for G
     std::cout << "==========Inverse for G==========" << std::endl;
-    double G_p[2] = {0.05, -0.25};
+    std::array<double, 2> G_p = {0.05, -0.25};
     std::cout << "Input G: " << G_p[0] << ", " << G_p[1] << std::endl;
     new_theta_beta = legmodel.inverse(G_p, "G");
     legmodel.forward(new_theta_beta[0], new_theta_beta[1]);
@@ -48,7 +48,7 @@ int main() {
     std::cout << "Output G: " << legmodel.G[0] << ", " << legmodel.G[1] << std::endl;
     // inverse for left upper rim
     std::cout << "==========Inverse for U_l==========" << std::endl;
-    double Ul_p[2] = {-0.01, -0.015};
+    std::array<double, 2> Ul_p = {-0.01, -0.015};
     std::cout << "Input U_l: " << Ul_p[0] << ", " << Ul_p[1] << std::endl;
     new_theta_beta = legmodel.inverse(Ul_p, "U_l");
     legmodel.forward(new_theta_beta[0], new_theta_beta[1]);
@@ -56,7 +56,7 @@ int main() {
     std::cout << "Output U_l: " << legmodel.U_l[0] << ", " << legmodel.U_l[1] << std::endl;
     // inverse for right lower rim
     std::cout << "==========Inverse for L_r==========" << std::endl;
-    double Lr_p[2] = {-0.01, -0.015};
+    std::array<double, 2> Lr_p = {-0.01, -0.015};
     std::cout << "Input L_r: " << Lr_p[0] << ", " << Lr_p[1] << std::endl;
     new_theta_beta = legmodel.inverse(Lr_p, "L_r");
     legmodel.forward(new_theta_beta[0], new_theta_beta[1]);

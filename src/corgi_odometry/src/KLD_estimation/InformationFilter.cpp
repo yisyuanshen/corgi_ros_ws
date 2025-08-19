@@ -318,6 +318,30 @@ namespace estimation_model {
             return;
         }
     }
+
+    void GKLD::valid(bool exclude_[4]) {
+        y_set.resize(pool_size);
+        Y_set.resize(pool_size);
+        Eigen::VectorXf sum_y = y;
+        Eigen::MatrixXf sum_Y = Y;
+        for (int i = 0; i < pool_size; i++) {
+            exclude[i] = exclude_[i];
+            if(!exclude[i]) {
+                Eigen::VectorXf y__;
+                Eigen::MatrixXf Y__;
+                information_pools[i]->valid(y__, Y__);
+                y_set[i] = y__;
+                Y_set[i] = Y__;
+                sum_y += y__;
+                sum_Y += Y__;
+            }
+        }
+        Y = sum_Y;
+        y = sum_y;
+        x = Y.inverse() * y;
+        return;
+    }
+    
     void GKLD::iterative_valid() {
     }
 }

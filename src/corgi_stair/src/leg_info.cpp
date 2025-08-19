@@ -12,7 +12,7 @@ LegInfo::LegInfo(int leg_ID, double BL) :
     one_step(true), 
     contact_edge(false), 
     contact_alpha(0.0), 
-    stair(0) 
+    stair_count(0)
 {
 
 }//end LegInfo

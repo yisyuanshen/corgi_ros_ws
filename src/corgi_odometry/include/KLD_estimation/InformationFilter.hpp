@@ -86,6 +86,7 @@ namespace estimation_model {
         void push_pkld(PKLD* p) ;
         void predict() ;
         void valid();
+        void valid(bool exclude_[4]);
         void certain_valid(PKLD* p);
         void score(Eigen::MatrixXf Yj, Eigen::VectorXf yj, int i);
         void iterative_valid() ;

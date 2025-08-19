@@ -1,0 +1,99 @@
+#include <iostream>
+#include "ros/ros.h"
+
+#include "leg_model.hpp"
+#include "fitted_coefficient.hpp"
+
+#include "corgi_msgs/MotorCmdStamped.h"
+#include "corgi_msgs/MotorStateStamped.h"
+
+std::array<double, 2> eta;
+corgi_msgs::MotorStateStamped motor_state;
+
+void motor_state_cb(const corgi_msgs::MotorStateStamped msg){
+    motor_state = msg;
+}
+
+int main(int argc, char **argv) {
+    ros::init(argc, argv, "corgi_rt_control");
+
+    ros::NodeHandle nh;
+    ros::Publisher motor_cmd_pub = nh.advertise<corgi_msgs::MotorCmdStamped>("motor/command", 1000);
+    ros::Subscriber motor_state_sub = nh.subscribe<corgi_msgs::MotorStateStamped>("motor/state", 1000, motor_state_cb);
+    ros::Rate rate(1000);
+
+    corgi_msgs::MotorCmdStamped motor_cmd;
+
+    std::vector<corgi_msgs::MotorCmd*> motor_cmd_modules = {
+        &motor_cmd.module_a,
+        &motor_cmd.module_b,
+        &motor_cmd.module_c,
+        &motor_cmd.module_d
+    };
+
+    std::vector<corgi_msgs::MotorState*> motor_state_modules = {
+        &motor_state.module_a,
+        &motor_state.module_b,
+        &motor_state.module_c,
+        &motor_state.module_d
+    };
+
+    ROS_INFO("Leg Transform Starts\n");
+
+    double theta_err[4];
+    double beta_err[4];
+
+    for (int i=0; i<1000; i++) {
+        ros::spinOnce();
+        rate.sleep();
+    }
+    
+    for (int i=0; i<4; i++) {
+        motor_cmd_modules[i]->theta = motor_state_modules[i]->theta;
+        motor_cmd_modules[i]->beta = motor_state_modules[i]->beta;
+        motor_cmd_modules[i]->kp_r = 90;
+        motor_cmd_modules[i]->kp_l = 90;
+        motor_cmd_modules[i]->ki_r = 0;
+        motor_cmd_modules[i]->ki_l = 0;
+        motor_cmd_modules[i]->kd_r = 1.75;
+        motor_cmd_modules[i]->kd_l = 1.75;
+        motor_cmd_modules[i]->torque_r = 0;
+        motor_cmd_modules[i]->torque_l = 0;
+
+        theta_err[i] = (17/180.0*M_PI-motor_state_modules[i]->theta);
+        beta_err[i] = (-motor_state_modules[i]->beta);
+
+        if (motor_cmd_modules[i]->theta < 17/180.0*M_PI) {
+            ros::shutdown();
+            return 0;
+        }
+    }
+
+    for (int i=0; i<2000; i++){
+        for (int j=0; j<4; j++){
+            motor_cmd_modules[j]->theta += theta_err[j]/2000.0;
+        }
+
+        motor_cmd.header.seq = -1;
+
+        motor_cmd_pub.publish(motor_cmd);
+
+        rate.sleep();
+    }
+
+    for (int i=0; i<5000; i++){
+        for (int j=0; j<4; j++){
+            motor_cmd_modules[j]->beta += beta_err[j]/5000.0;
+        }
+
+        motor_cmd.header.seq = -1;
+
+        motor_cmd_pub.publish(motor_cmd);
+
+        rate.sleep();
+    }
+
+    ros::shutdown();
+    
+    return 0;
+}

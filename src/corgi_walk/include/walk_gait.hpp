@@ -15,7 +15,7 @@ class WalkGait {
     public:
         WalkGait(bool sim=true, double CoM_bias=0.0, int rate=1000, double BL=0.444, double BW=0.4, double BH=0.2);
 
-        void initialize(double init_eta[8]);
+        void initialize(double init_eta[8], double step_length_=0.3);
         std::array<std::array<double, 4>, 2> step();
         void set_velocity(double new_value);
         void set_stand_height(double new_value);

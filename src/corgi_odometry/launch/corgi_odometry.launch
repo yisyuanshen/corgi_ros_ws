@@ -1,0 +1,4 @@
+<launch>
+    <node name="corgi_odometry" pkg="corgi_odometry" type="corgi_odometry"/>
+    <node name="corgi_z_position" pkg="corgi_odometry" type="corgi_z_position"/>
+</launch>
