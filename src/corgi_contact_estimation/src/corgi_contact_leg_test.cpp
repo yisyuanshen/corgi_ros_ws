@@ -8,13 +8,14 @@
 #include "corgi_msgs/TriggerStamped.h"
 
 bool trigger = false;
+bool sim = true;
 
 void trigger_cb(const corgi_msgs::TriggerStamped msg){
     trigger = msg.enable;
 }
 
 int main(int argc, char **argv) {
-    ros::init(argc, argv, "corgi_csv_control");
+    ros::init(argc, argv, "corgi_contact_leg_test");
 
     ros::NodeHandle nh;
     ros::Publisher motor_cmd_pub = nh.advertise<corgi_msgs::MotorCmdStamped>("motor/command", 1000);
@@ -23,56 +24,41 @@ int main(int argc, char **argv) {
 
     corgi_msgs::MotorCmdStamped motor_cmd;
 
-    std::vector<corgi_msgs::MotorCmd*> motor_cmds = {
+    std::vector<corgi_msgs::MotorCmd*> motor_cmd_modules = {
         &motor_cmd.module_a,
         &motor_cmd.module_b,
         &motor_cmd.module_c,
         &motor_cmd.module_d
     };
 
-    if (argc < 2){
-        ROS_INFO("Please input csv file path\n");
-        return 1;
-    }
-    
-    std::string csv_file_path;
-    csv_file_path = std::getenv("HOME");
-    csv_file_path += "/corgi_ws/corgi_ros_ws/input_csv/";
-    csv_file_path += argv[1];
-    csv_file_path += ".csv";
-    
-
-    std::ifstream csv_file(csv_file_path);
-    if (!csv_file.is_open()) {
-        ROS_INFO("Failed to open the CSV file\n");
-        return 1;
-    }
-
     std::string line;
     
 
     ROS_INFO("Leg Transform Starts\n");
     
-    for (int i=0; i<5000; i++){
-        std::getline(csv_file, line);
-        std::vector<double> columns;
-        std::stringstream ss(line);
-        std::string item;
-        
-        for (auto& cmd : motor_cmds){
-            std::getline(ss, item, ',');
-            cmd->theta = std::stod(item);
-
-            std::getline(ss, item, ',');
-            cmd->beta = std::stod(item);
-
-            cmd->kp_r = 90;
-            cmd->kp_l = 90;
-            cmd->ki_r = 0;
-            cmd->ki_l = 0;
+    
+    for (auto& cmd : motor_cmd_modules) {
+        cmd->theta = 17/180.0*M_PI;
+        cmd->beta = 0/180.0*M_PI;
+        cmd->kp_r = 90;
+        cmd->kp_l = 90;
+        cmd->ki_r = 0;
+        cmd->ki_l = 0;
+        if (sim) {
+            cmd->kd_r = 0.75;
+            cmd->kd_l = 0.75;
+        }
+        else {
             cmd->kd_r = 1.75;
             cmd->kd_l = 1.75;
         }
+    }
+
+    for (int i=0; i<1000; i++){
+        motor_cmd_modules[0]->theta += 13/2000.0/180.0*M_PI;
+        motor_cmd_modules[1]->theta += 13/2000.0/180.0*M_PI;
+        motor_cmd_modules[2]->theta += 13/2000.0/180.0*M_PI;
+        motor_cmd_modules[3]->theta += 13/2000.0/180.0*M_PI;
 
         motor_cmd.header.seq = -1;
 
@@ -83,39 +69,62 @@ int main(int argc, char **argv) {
 
     ROS_INFO("Leg Transform Finished\n");
 
+    for (int i=0; i<1000; i++){
+        rate.sleep();
+    }
+
     
     while (ros::ok()){
         ros::spinOnce();
 
         if (trigger){
-            ROS_INFO("CSV Trajectory Starts\n");
+            ROS_INFO("Real Time Trajectory Starts\n");
 
-            int seq = 0;
-            while (ros::ok() && std::getline(csv_file, line)) {
-                std::vector<double> columns;
-                std::stringstream ss(line);
-                std::string item;
-                
-                for (auto& cmd : motor_cmds){
-                    std::getline(ss, item, ',');
-                    cmd->theta = std::stod(item);
-
-                    std::getline(ss, item, ',');
-                    cmd->beta = std::stod(item);
-
-                    cmd->kp_r = 90;
-                    cmd->kp_l = 90;
-                    cmd->ki_r = 0;
-                    cmd->ki_l = 0;
-                    cmd->kd_r = 1.75;
-                    cmd->kd_l = 1.75;
+            int loop_count = 0;
+            while (ros::ok()) {
+                if (loop_count < 200) {
                 }
+                else if (loop_count < 3000) {
 
-                motor_cmd.header.seq = seq;
+                    motor_cmd_modules[0]->beta -= 40/2000.0/180.0*M_PI;
+                    motor_cmd_modules[1]->beta += 40/2000.0/180.0*M_PI;
+                    motor_cmd_modules[2]->beta += 40/2000.0/180.0*M_PI;
+                    motor_cmd_modules[3]->beta -= 40/2000.0/180.0*M_PI;
+                }
+                // else if (loop_count < 5000) {
+                //     // move module A (single leg)
+                //     motor_cmd_modules[0]->theta = eta[0];
+                //     motor_cmd_modules[0]->beta = eta[1];
+                // }
+                // else if (loop_count < 7000) {
+                //     // move module A (single leg)
+                //     motor_cmd_modules[0]->theta = eta[0];
+                //     motor_cmd_modules[0]->beta = eta[1];
+                // }
+                // else if (loop_count < 9000) {
+                //     // move module A (single leg)
+                //     motor_cmd_modules[0]->theta = eta[0];
+                //     motor_cmd_modules[0]->beta = eta[1];
+                // }
+                // else if (loop_count < 10000) {
+
+                // }
+                // else if (loop_count < 12000) {
+                //     // move module A (single leg)
+                //     motor_cmd_modules[0]->beta = 40*sin((loop_count-10000)/1000.0*M_PI)/180.0*M_PI;
+                //     motor_cmd_modules[1]->beta = 40*sin((loop_count-10000)/1000.0*M_PI)/180.0*M_PI;
+                //     motor_cmd_modules[2]->beta = 40*sin((loop_count-10000)/1000.0*M_PI)/180.0*M_PI;
+                //     motor_cmd_modules[3]->beta = 40*sin((loop_count-10000)/1000.0*M_PI)/180.0*M_PI;
+                // }
+                else {
+                    break;
+                } 
+
+                motor_cmd.header.seq = loop_count;
 
                 motor_cmd_pub.publish(motor_cmd);
 
-                seq++;
+                loop_count++;
 
                 rate.sleep();
             }
