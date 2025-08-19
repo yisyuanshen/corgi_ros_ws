@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>corgi_csv_control</name>
+  <name>corgi_contact_estimation</name>
   <version>0.0.0</version>
   <description>The corgi_contact_estimation package</description>
   <maintainer email="r13522819@ntu.edu.tw">hiho817</maintainer>
