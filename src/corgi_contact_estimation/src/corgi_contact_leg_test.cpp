@@ -55,10 +55,10 @@ int main(int argc, char **argv) {
     }
 
     for (int i=0; i<1000; i++){
-        motor_cmd_modules[0]->theta += 13/2000.0/180.0*M_PI;
-        motor_cmd_modules[1]->theta += 13/2000.0/180.0*M_PI;
-        motor_cmd_modules[2]->theta += 13/2000.0/180.0*M_PI;
-        motor_cmd_modules[3]->theta += 13/2000.0/180.0*M_PI;
+        motor_cmd_modules[0]->theta += 43/2000.0/180.0*M_PI;
+        motor_cmd_modules[1]->theta += 43/2000.0/180.0*M_PI;
+        motor_cmd_modules[2]->theta += 43/2000.0/180.0*M_PI;
+        motor_cmd_modules[3]->theta += 43/2000.0/180.0*M_PI;
 
         motor_cmd.header.seq = -1;
 
@@ -82,20 +82,15 @@ int main(int argc, char **argv) {
 
             int loop_count = 0;
             while (ros::ok()) {
-                if (loop_count < 200) {
+                if (loop_count < 2000) {
+                    motor_cmd_modules[0]->beta += 40/2000.0/180.0*M_PI;
+                    motor_cmd_modules[1]->beta -= 40/2000.0/180.0*M_PI;
+                    motor_cmd_modules[2]->beta -= 40/2000.0/180.0*M_PI;
+                    motor_cmd_modules[3]->beta += 40/2000.0/180.0*M_PI;
                 }
-                else if (loop_count < 3000) {
-
-                    motor_cmd_modules[0]->beta -= 40/2000.0/180.0*M_PI;
-                    motor_cmd_modules[1]->beta += 40/2000.0/180.0*M_PI;
-                    motor_cmd_modules[2]->beta += 40/2000.0/180.0*M_PI;
-                    motor_cmd_modules[3]->beta -= 40/2000.0/180.0*M_PI;
+                else if (loop_count < 5000) {
+                    motor_cmd_modules[1]->beta -= 80/2000.0/180.0*M_PI;
                 }
-                // else if (loop_count < 5000) {
-                //     // move module A (single leg)
-                //     motor_cmd_modules[0]->theta = eta[0];
-                //     motor_cmd_modules[0]->beta = eta[1];
-                // }
                 // else if (loop_count < 7000) {
                 //     // move module A (single leg)
                 //     motor_cmd_modules[0]->theta = eta[0];
