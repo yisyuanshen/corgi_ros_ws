@@ -18,12 +18,15 @@ find_package(catkin REQUIRED COMPONENTS rospy roscpp std_msgs rosgraph_msgs geom
 add_message_files(
   FILES
   Float64Stamped.msg
+  ContactPoint.msg
 )
 
 add_service_files(
   FILES
   get_uint64.srv
   motor_set_control_pid.srv
+  node_enable_contact_points_tracking.srv
+  node_get_contact_points.srv
   node_get_orientation.srv
   node_get_position.srv
   set_float.srv

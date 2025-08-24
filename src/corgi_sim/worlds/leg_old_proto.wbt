@@ -8,8 +8,8 @@ WorldInfo {
   basicTimeStep 1
 }
 Viewpoint {
-  orientation -0.17040807964682583 0.31138988127206463 0.934878295946831 1.0607052467680953
-  position -0.7875595429553036 -1.2516265951903622 0.8689909295100642
+  orientation 0 0 1 1.5707963267948966
+  position 1.1987709076303759 -1.4289864507023864 0.1996857431022951
 }
 TexturedBackground {
 }
@@ -29,7 +29,7 @@ Solid {
             jointParameters JointParameters {
             }
             endPoint DEF LEG Robot {
-              translation 0 0 0.4
+              translation 1.21 0.29 0.14
               rotation 0 0.70710528118436 0.707108281185553 3.14159
               children [
                 DEF BASE Shape {
@@ -1978,4 +1978,35 @@ Solid {
     }
   ]
   name "Base"
+}
+Robot {
+  translation 1 0 0
+  children [
+    TouchSensor {
+      translation 0.205 0.155 0.01
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0.7 0.7 0.7
+            metalness 0
+          }
+          geometry Box {
+            size 0.8 0.3 0.01
+          }
+        }
+      ]
+      name "force_plate_0"
+      boundingObject Box {
+        size 0.8 0.3 0.01
+      }
+      physics Physics {
+        density -1
+        mass 1
+      }
+      type "force-3d"
+      lookupTable []
+    }
+  ]
+  name "Force Plate"
+  controller "force_plate"
 }

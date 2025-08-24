@@ -1,0 +1,4 @@
+uint64 node
+bool include_descendants
+---
+corgi_sim/ContactPoint[] contact_points

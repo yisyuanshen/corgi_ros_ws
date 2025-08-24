@@ -26,13 +26,13 @@ add_message_files(
   SteeringCmdStamped.msg
   SteeringStateStamped.msg
   WheelCmd.msg
+  SimContactPoint.msg
   SimDataStamped.msg
   IMUStamped.msg
   FsmCmdStamped.msg
   FsmStateStamped.msg
   ContactState.msg
   ContactStateStamped.msg
-  StairPlanes.msg
 )
 
 add_service_files(

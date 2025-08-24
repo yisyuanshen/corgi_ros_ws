@@ -11,12 +11,15 @@
 #include "corgi_sim/set_float.h"
 #include "corgi_sim/get_uint64.h"
 #include "corgi_sim/motor_set_control_pid.h"
+#include "corgi_sim/node_enable_contact_points_tracking.h"
+#include "corgi_sim/node_get_contact_points.h"
 #include "corgi_sim/node_get_position.h"
 #include "corgi_sim/node_get_orientation.h"
 #include "corgi_sim/Float64Stamped.h"
 #include "corgi_msgs/MotorCmdStamped.h"
 #include "corgi_msgs/MotorStateStamped.h"
 #include "corgi_msgs/TriggerStamped.h"
+#include "corgi_msgs/SimContactPoint.h"
 #include "corgi_msgs/SimDataStamped.h"
 
 
@@ -59,6 +62,9 @@ corgi_sim::set_int time_step_srv;
 corgi_sim::get_uint64 node_value_srv;
 corgi_sim::node_get_position node_pos_srv;
 corgi_sim::node_get_orientation node_orien_srv;
+
+corgi_sim::node_enable_contact_points_tracking cp_enable_srv;
+corgi_sim::node_get_contact_points cp_srv;
 
 rosgraph_msgs::Clock simulationClock;
 
@@ -149,6 +155,9 @@ int main(int argc, char **argv) {
     ros::ServiceClient DR_motor_trq_client = nh.serviceClient<corgi_sim::set_float>("lh_left_motor/set_torque");
     ros::ServiceClient DL_motor_trq_client = nh.serviceClient<corgi_sim::set_float>("lh_right_motor/set_torque");
     
+    ros::ServiceClient cp_enable_client = nh.serviceClient<corgi_sim::node_enable_contact_points_tracking>("supervisor/node/enable_contact_points_tracking");
+    ros::ServiceClient cp_get_client = nh.serviceClient<corgi_sim::node_get_contact_points>("supervisor/node/get_contact_points");
+
     ros::Subscriber AR_encoder_sub = nh.subscribe<corgi_sim::Float64Stamped>("lf_left_motor_sensor/value" , 1, AR_encoder_cb);
     ros::Subscriber AL_encoder_sub = nh.subscribe<corgi_sim::Float64Stamped>("lf_right_motor_sensor/value", 1, AL_encoder_cb);
     ros::Subscriber BR_encoder_sub = nh.subscribe<corgi_sim::Float64Stamped>("rf_left_motor_sensor/value" , 1, BR_encoder_cb);
@@ -176,6 +185,12 @@ int main(int argc, char **argv) {
     node_pos_srv.request.node = node_value_srv.response.value;
     node_orien_srv.request.node = node_value_srv.response.value;
     
+    cp_enable_srv.request.node = node_value_srv.response.value;
+    cp_enable_srv.request.include_descendants = true;
+
+    cp_srv.request.node = node_value_srv.response.value;
+    cp_srv.request.include_descendants = true;
+
     signal(SIGINT, signal_handler);
 
     trigger.enable = true;
@@ -233,6 +248,19 @@ int main(int argc, char **argv) {
         motor_state.module_c.velocity_l = CL_phi_dot;
         motor_state.module_d.velocity_r = DR_phi_dot;
         motor_state.module_d.velocity_l = DL_phi_dot;
+
+        cp_get_client.call(cp_srv);
+        size_t n = cp_srv.response.contact_points.size();
+        sim_data.contact.clear();
+        if (n > 0) {
+            for (int m=0; m<n; m++) {
+                const auto& p = cp_srv.response.contact_points[m];
+                corgi_msgs::SimContactPoint contact;
+                contact.id = p.node_id;
+                contact.point = p.point;
+                sim_data.contact.push_back(contact);
+            }
+        }
 
         Eigen::Quaterniond orientation(imu.orientation.w, imu.orientation.x, imu.orientation.y, imu.orientation.z);
         Eigen::Vector3d linear_acceleration(imu.linear_acceleration.x, imu.linear_acceleration.y, imu.linear_acceleration.z);
