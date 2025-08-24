@@ -1,0 +1,12 @@
+<launch>
+    <param name="use_sim_time" value="true" />
+    
+    <arg name="world" default="$(find corgi_sim)/worlds/corgi_force_plate_proto.wbt"/>
+    <arg name="mode" default="realtime"/>  <!--realtime pause fast-->
+
+    <node name="webots_launcher" pkg="corgi_sim" type="webots_launcher.py" args="--world=$(arg world) --mode=$(arg mode)" required="true"/>
+    <node name="corgi_data_recorder" pkg="corgi_data_recorder" type="corgi_data_recorder"/>
+    <node name="corgi_sim" pkg="corgi_sim" type="corgi_sim_trq" respawn="true" output="screen"/>
+    <node name="force_estimation" pkg="corgi_force_estimation" type="force_estimation"/>
+    <node name="change_leg_length_same_height" pkg="corgi_terrain_estimator" type="change_leg_length_same_height" output="screen"/>
+</launch>
