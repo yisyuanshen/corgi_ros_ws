@@ -9,12 +9,16 @@
 #include "sensor_msgs/Imu.h"
 #include "corgi_sim/set_int.h"
 #include "corgi_sim/set_float.h"
+#include "corgi_sim/field_get_string.h"
 #include "corgi_sim/get_uint64.h"
 #include "corgi_sim/motor_set_control_pid.h"
 #include "corgi_sim/node_enable_contact_points_tracking.h"
 #include "corgi_sim/node_get_contact_points.h"
+#include "corgi_sim/node_get_def.h"
+#include "corgi_sim/node_get_field.h"
 #include "corgi_sim/node_get_position.h"
 #include "corgi_sim/node_get_orientation.h"
+#include "corgi_sim/supervisor_get_from_id.h"
 #include "corgi_sim/Float64Stamped.h"
 #include "corgi_msgs/MotorCmdStamped.h"
 #include "corgi_msgs/MotorStateStamped.h"
@@ -255,8 +259,27 @@ int main(int argc, char **argv) {
         if (n > 0) {
             for (int m=0; m<n; m++) {
                 const auto& p = cp_srv.response.contact_points[m];
+
+                corgi_sim::supervisor_get_from_id node_get_id_srv;
+                node_get_id_srv.request.id = p.node_id;
+                ros::service::call("supervisor/get_from_id", node_get_id_srv);
+
+                corgi_sim::node_get_field field_get_srv;
+                field_get_srv.request.node = node_get_id_srv.response.node;
+                field_get_srv.request.fieldName = "name";
+                ros::service::call("supervisor/node/get_field", field_get_srv);
+
+                corgi_sim::field_get_string name_get_srv;
+                name_get_srv.request.field = field_get_srv.response.field;
+                ros::service::call("supervisor/field/get_string", name_get_srv);
+
+                corgi_sim::node_get_def def_get_srv;
+                def_get_srv.request.node = node_get_id_srv.response.node;
+                ros::service::call("supervisor/node/get_def", def_get_srv);
+
                 corgi_msgs::SimContactPoint contact;
-                contact.id = p.node_id;
+                contact.def_name = def_get_srv.response.name;
+                contact.name = name_get_srv.response.value;
                 contact.point = p.point;
                 sim_data.contact.push_back(contact);
             }

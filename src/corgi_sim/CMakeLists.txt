@@ -23,12 +23,16 @@ add_message_files(
 
 add_service_files(
   FILES
+  field_get_string.srv
   get_uint64.srv
   motor_set_control_pid.srv
   node_enable_contact_points_tracking.srv
   node_get_contact_points.srv
+  node_get_def.srv
+  node_get_field.srv
   node_get_orientation.srv
   node_get_position.srv
+  supervisor_get_from_id.srv
   set_float.srv
   set_int.srv
 )

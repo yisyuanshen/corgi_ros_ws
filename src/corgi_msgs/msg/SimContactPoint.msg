@@ -1,2 +1,3 @@
-int32 id
+string def_name
+string name
 geometry_msgs/Point point
