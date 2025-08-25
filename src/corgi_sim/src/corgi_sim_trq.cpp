@@ -25,6 +25,8 @@
 #include "corgi_msgs/TriggerStamped.h"
 #include "corgi_msgs/SimContactPoint.h"
 #include "corgi_msgs/SimDataStamped.h"
+#include "corgi_msgs/StructuredContactDataStamped.h"
+#include "contact_processor.h"
 
 
 corgi_msgs::MotorCmdStamped motor_cmd;
@@ -33,6 +35,8 @@ corgi_msgs::TriggerStamped trigger;
 corgi_msgs::SimDataStamped sim_data;
 sensor_msgs::Imu imu;
 sensor_msgs::Imu imu_filtered;
+
+ContactProcessor contact_processor;
 
 double AR_phi = 0.0;
 double AL_phi = 0.0;
@@ -180,6 +184,7 @@ int main(int argc, char **argv) {
     ros::Publisher imu_pub = nh.advertise<sensor_msgs::Imu>("imu", 1000);
     ros::Publisher trigger_pub = nh.advertise<corgi_msgs::TriggerStamped>("trigger", 1000);
     ros::Publisher sim_data_pub = nh.advertise<corgi_msgs::SimDataStamped>("sim/data", 1000);
+    ros::Publisher structured_contact_pub = nh.advertise<corgi_msgs::StructuredContactDataStamped>("sim/structured_contact", 1000);
     
     ros::WallRate rate(1000);
 
@@ -285,6 +290,11 @@ int main(int argc, char **argv) {
             }
         }
 
+        // Process structured contact data
+        corgi_msgs::StructuredContactDataStamped structured_contact = contact_processor.processContacts(sim_data.contact);
+        structured_contact.header.seq = loop_counter;
+        // structured_contact.header.stamp = ros::Time::now();
+
         Eigen::Quaterniond orientation(imu.orientation.w, imu.orientation.x, imu.orientation.y, imu.orientation.z);
         Eigen::Vector3d linear_acceleration(imu.linear_acceleration.x, imu.linear_acceleration.y, imu.linear_acceleration.z);
         Eigen::Vector3d gravity_global(0, 0, 9.81);
@@ -308,6 +318,7 @@ int main(int argc, char **argv) {
         trigger_pub.publish(trigger);
         imu_pub.publish(imu_filtered);
         sim_data_pub.publish(sim_data);
+        structured_contact_pub.publish(structured_contact);
 
         double clock = loop_counter*0.001;
         simulationClock.clock.sec = (int)clock;

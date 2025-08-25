@@ -31,8 +31,16 @@ add_message_files(
   IMUStamped.msg
   FsmCmdStamped.msg
   FsmStateStamped.msg
+
+  # Old contact messages used in odometry
   ContactState.msg
   ContactStateStamped.msg
+
+  # New contact messages used in estimation
+  ContactPoint.msg
+  LegContact.msg
+  StructuredContactDataStamped.msg
+  RimContact.msg
 )
 
 add_service_files(
