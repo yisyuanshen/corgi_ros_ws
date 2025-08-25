@@ -92,7 +92,6 @@ corgi_msgs::StructuredContactDataStamped ContactProcessor::processContacts(const
     int total_points = 0;
 
     if (raw_contacts.empty()) {
-        std::cout << "No contact points detected.\n";
         structured_data.total_contact_points = 0;
         return structured_data;
     }

@@ -16,6 +16,7 @@
 #include "corgi_msgs/ImpedanceCmdStamped.h"
 #include "corgi_msgs/ForceStateStamped.h"
 #include "corgi_msgs/SimDataStamped.h"
+#include "corgi_msgs/StructuredContactDataStamped.h"
 #include "geometry_msgs/Vector3.h"
 
 
@@ -30,7 +31,7 @@ corgi_msgs::ForceStateStamped force_state;
 corgi_msgs::SimDataStamped sim_data;
 geometry_msgs::Vector3 odom_pos;
 geometry_msgs::Vector3 odom_vel;
-
+corgi_msgs::StructuredContactDataStamped contact_data;
 std::ofstream output_file;
 std::string output_file_name = "";
 std::string output_file_path = "";
@@ -129,6 +130,8 @@ void trigger_cb(const corgi_msgs::TriggerStamped msg){
                         << "odom_pos_x" << "," << "odom_pos_y" << "," << "odom_pos_z" << ","
                         << "odom_vel_x" << "," << "odom_vel_y" << "," << "odom_vel_z" << ","
 
+                        << "rf_contact" << "," << "lf_contact" << "," << "rh_contact" << "," << "lh_contact" << ","
+
                         << "power_seq" << "," << "power_sec" << "," << "power_usec" << ","
                         << "v_0" << "," << "i_0" << ","
                         << "v_1" << "," << "i_1" << ","
@@ -199,6 +202,10 @@ void odom_vel_cb(const geometry_msgs::Vector3::ConstPtr &msg){
     odom_vel = *msg;
 }
 
+void contact_data_cb(const corgi_msgs::StructuredContactDataStamped::ConstPtr &msg){
+    contact_data = *msg;
+}
+
 
 void write_data() {
     if (!output_file.is_open()){
@@ -259,6 +266,8 @@ void write_data() {
                 << odom_pos.x << "," << odom_pos.y << "," << odom_pos.z << ","
                 << odom_vel.x << "," << odom_vel.y << "," << odom_vel.z << ","
 
+                << contact_data.legs[0].has_contact << "," << contact_data.legs[1].has_contact << "," << contact_data.legs[2].has_contact << "," << contact_data.legs[3].has_contact << ","
+
                 << power_state.header.seq << "," << power_state.header.stamp.sec << "," << power_state.header.stamp.nsec << ","
                 << power_state.v_0 << "," << power_state.i_0 << ","
                 << power_state.v_1 << "," << power_state.i_1 << ","
@@ -295,6 +304,7 @@ int main(int argc, char **argv) {
     ros::Subscriber sim_data_sub = nh.subscribe<corgi_msgs::SimDataStamped>("sim/data", 1000, sim_data_cb);
     ros::Subscriber odom_pos_sub = nh.subscribe<geometry_msgs::Vector3>("odometry/position", 1000, odom_pos_cb);
     ros::Subscriber odom_vel_sub = nh.subscribe<geometry_msgs::Vector3>("odometry/velocity", 1000, odom_vel_cb);
+    ros::Subscriber contact_data_sub = nh.subscribe<corgi_msgs::StructuredContactDataStamped>("sim/structured_contact", 1000, contact_data_cb);
     ros::Rate rate(1000);
 
     signal(SIGINT, signal_handler);
