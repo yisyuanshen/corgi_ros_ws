@@ -130,7 +130,7 @@ void trigger_cb(const corgi_msgs::TriggerStamped msg){
                         << "odom_pos_x" << "," << "odom_pos_y" << "," << "odom_pos_z" << ","
                         << "odom_vel_x" << "," << "odom_vel_y" << "," << "odom_vel_z" << ","
 
-                        << "rf_contact" << "," << "lf_contact" << "," << "rh_contact" << "," << "lh_contact" << ","
+                        << "lf_contact" << "," << "rf_contact" << "," << "rh_contact" << "," << "lh_contact" << ","
 
                         << "power_seq" << "," << "power_sec" << "," << "power_usec" << ","
                         << "v_0" << "," << "i_0" << ","
@@ -266,7 +266,10 @@ void write_data() {
                 << odom_pos.x << "," << odom_pos.y << "," << odom_pos.z << ","
                 << odom_vel.x << "," << odom_vel.y << "," << odom_vel.z << ","
 
-                << contact_data.legs[0].has_contact << "," << contact_data.legs[1].has_contact << "," << contact_data.legs[2].has_contact << "," << contact_data.legs[3].has_contact << ","
+                << (contact_data.legs[0].has_contact ? 1 : 0) << "," 
+                << (contact_data.legs[1].has_contact ? 1 : 0) << "," 
+                << (contact_data.legs[2].has_contact ? 1 : 0) << "," 
+                << (contact_data.legs[3].has_contact ? 1 : 0) << ","
 
                 << power_state.header.seq << "," << power_state.header.stamp.sec << "," << power_state.header.stamp.nsec << ","
                 << power_state.v_0 << "," << power_state.i_0 << ","
