@@ -1,3 +1,4 @@
+# change_leg_length_same_height from 0.13 to 0.24
 #include <iostream>
 #include "ros/ros.h"
 #include "corgi_msgs/MotorCmdStamped.h"
@@ -52,13 +53,13 @@ int main(int argc, char **argv) {
     double mg = 19.68*9.81;
     
     // 初始站高設定 (固定值)
-    double h = 0.03;                        // 初始站高 15cm
+    double h = 0.01;                        // 初始站高 13cm
     
     // 腿長變化參數  
     double change_leg_length = 0.0;         // 當前腿長變化量
     double min_change = 0.0;                // 最小變化量 (不變)
-    double max_change = 0.03;               // 最大變化量 (額外伸長3cm)
-    double leg_increment = 0.0001;          // 腿長變化增量 (0.1mm)
+    double max_change = 0.12;               // 最大變化量 (額外伸長12cm)
+    double leg_increment = 0.00001;          // 腿長變化增量 (0.01mm)
 
     double s = 0.0;
 
@@ -98,12 +99,12 @@ int main(int argc, char **argv) {
             while (ros::ok()) {
                 double current_leg_increment = 0.0;  // 當前迴圈的腿長變化增量
 
-                if (loop_count < 500) {
+                if (loop_count < 2000) {
                     current_leg_increment = 0.0;  // 保持不變
                     ROS_INFO_THROTTLE(1.0, "Phase 1: Stabilizing at initial height");
                 }
-                else if (loop_count < 4000) {
-                    if (loop_count < 1500) { 
+                else if (loop_count < 10000) {
+                    if (loop_count < 5000) { 
                         // 緩慢伸長腿部
                         if (change_leg_length < max_change) {
                             current_leg_increment = leg_increment;  // 伸長
@@ -116,13 +117,13 @@ int main(int argc, char **argv) {
                             ROS_INFO("Phase 2: Extending legs, change: %.4f", change_leg_length);
                         }
                     } 
-                    else if (loop_count < 2500) { 
+                    else if (loop_count < 7000) { 
                         current_leg_increment = 0.0;  // 保持最大伸長
                         if (loop_count % 100 == 0) {
                             ROS_INFO("Phase 3: Holding at maximum extension: %.4f", change_leg_length);
                         }
                     } 
-                    else if (loop_count < 4000) { 
+                    else if (loop_count < 10000) { 
                         // 緩慢縮短腿部
                         if (change_leg_length > min_change) {
                             current_leg_increment = -leg_increment;  // 縮回

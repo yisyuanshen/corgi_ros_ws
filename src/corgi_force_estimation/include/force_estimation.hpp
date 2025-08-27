@@ -19,7 +19,7 @@
 #include "corgi_msgs/ContactStateStamped.h"
 #include "sensor_msgs/Imu.h"
 
-bool sim = true;
+bool sim = false;
 LegModel legmodel(sim);
 
 Eigen::MatrixXd H_l_coef(2, 8);

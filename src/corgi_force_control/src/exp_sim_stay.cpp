@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
     double mg = -19.5*9.81;
     double F_init = mg/4.0;
 
-    bool sim = true;
+    bool sim = false;
     LegModel legmodel(sim);
 
     Eigen::Vector4d forces;
@@ -104,10 +104,18 @@ int main(int argc, char **argv) {
         cmd->beta = 0/180.0*M_PI;
         cmd->Mx = 0;
         cmd->My = 0;
-        cmd->Bx = 100;
-        cmd->By = 100;
-        cmd->Kx = 2000;
-        cmd->Ky = 2000;
+        if (sim) {
+            cmd->Bx = 100;
+            cmd->By = 100;
+            cmd->Kx = 2000;
+            cmd->Ky = 2000;
+        }
+        else {
+            cmd->Bx = 80;
+            cmd->By = 10;
+            cmd->Kx = 2000;
+            cmd->Ky = 100;
+        }
     }
 
     for (int i=0; i<2000; i++){
