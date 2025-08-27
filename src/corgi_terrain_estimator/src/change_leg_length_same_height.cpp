@@ -1,4 +1,4 @@
-# change_leg_length_same_height from 0.13 to 0.24
+// change_leg_length_same_height from 0.13 to 0.24
 #include <iostream>
 #include "ros/ros.h"
 #include "corgi_msgs/MotorCmdStamped.h"
@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
     double change_leg_length = 0.0;         // 當前腿長變化量
     double min_change = 0.0;                // 最小變化量 (不變)
     double max_change = 0.12;               // 最大變化量 (額外伸長12cm)
-    double leg_increment = 0.00001;          // 腿長變化增量 (0.01mm)
+    double leg_increment = 0.0001;          // 腿長變化增量 (0.01mm)
 
     double s = 0.0;
 
