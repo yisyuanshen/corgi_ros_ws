@@ -26,6 +26,7 @@ corgi_msgs::MotorStateStamped motor_state;
 corgi_msgs::PowerCmdStamped power_cmd;
 corgi_msgs::PowerStateStamped power_state;
 sensor_msgs::Imu imu;
+sensor_msgs::Range range;
 corgi_msgs::ImpedanceCmdStamped imp_cmd;
 corgi_msgs::ForceStateStamped force_state;
 corgi_msgs::SimDataStamped sim_data;
@@ -145,7 +146,7 @@ void trigger_cb(const corgi_msgs::TriggerStamped msg){
                         << "v_10" << "," << "i_10" << ","
                         << "v_11" << "," << "i_11" << ","
                         
-                        << "sim_dst_lf" << "," << "sim_dst_lh" << "," << "sim_dst_rf" << "," << "sim_dst_rh"
+                        << "dst_lf" << "," << "dst_rf" << "," << "dst_rr" << "," << "dst_lh"
                         << "\n";
 
             ROS_INFO("Recording data to %s\n", output_file_name.c_str());
@@ -205,6 +206,10 @@ void odom_vel_cb(const geometry_msgs::Vector3::ConstPtr &msg){
 
 void odom_z_cb(const std_msgs::Float64::ConstPtr &msg){
     odom_z = msg->data;
+}
+
+void range_cb(const sensor_msgs::Range::ConstPtr &msg){
+    range = *msg;
 }
 
 void write_data() {
@@ -280,7 +285,7 @@ void write_data() {
                 << power_state.v_10 << "," << power_state.i_10 << ","
                 << power_state.v_11 << "," << power_state.i_11 << ","
                 
-                << sim_data.dst_lf << "," << sim_data.dst_lh << "," << sim_data.dst_rf << "," << sim_data.dst_rh << ","
+                << range.range_1 << "," << range.range_2 << "," << range.range_3 << "," << range.range_4 << ","
                 << "\n";
                 
     output_file.flush();
@@ -305,6 +310,7 @@ int main(int argc, char **argv) {
     ros::Subscriber odom_pos_sub = nh.subscribe<geometry_msgs::Vector3>("odometry/position", 1000, odom_pos_cb);
     ros::Subscriber odom_vel_sub = nh.subscribe<geometry_msgs::Vector3>("odometry/velocity", 1000, odom_vel_cb);
     ros::Subscriber odom_z_sub = nh.subscribe<std_msgs::Float64>("odometry/z_position_hip", 1000, odom_z_cb);
+    ros::Subscriber range_sub = nh.subscribe<sensor_msgs::Range>("range", 1000, range_cb);
     ros::Rate rate(1000);
 
     signal(SIGINT, signal_handler);
