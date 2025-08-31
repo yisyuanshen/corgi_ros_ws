@@ -301,7 +301,7 @@ void write_data() {
                 << power_state.v_9 << "," << power_state.i_9 << ","
                 << power_state.v_10 << "," << power_state.i_10 << ","
                 << power_state.v_11 << "," << power_state.i_11 << ","
-                
+
                 << sim_data.dst_lf << "," << sim_data.dst_lh << "," << sim_data.dst_rf << "," << sim_data.dst_rh << ","
                 << range_1.range << "," << range_2.range << "," << range_3.range << "," << range_4.range
                 << "\n";
@@ -332,6 +332,7 @@ int main(int argc, char **argv) {
     ros::Subscriber range_sub_2 = nh.subscribe<sensor_msgs::Range>("range_2", 1000, range_2_cb);
     ros::Subscriber range_sub_3 = nh.subscribe<sensor_msgs::Range>("range_3", 1000, range_3_cb);
     ros::Subscriber range_sub_4 = nh.subscribe<sensor_msgs::Range>("range_4", 1000, range_4_cb);
+
     ros::Rate rate(1000);
 
     signal(SIGINT, signal_handler);
