@@ -13,6 +13,7 @@
 #include "corgi_msgs/PowerStateStamped.h"
 #include "corgi_msgs/TriggerStamped.h"
 #include "sensor_msgs/Imu.h"
+#include "sensor_msgs/Range.h"
 #include "corgi_msgs/ImpedanceCmdStamped.h"
 #include "corgi_msgs/ForceStateStamped.h"
 #include "corgi_msgs/SimDataStamped.h"
@@ -26,6 +27,10 @@ corgi_msgs::MotorStateStamped motor_state;
 corgi_msgs::PowerCmdStamped power_cmd;
 corgi_msgs::PowerStateStamped power_state;
 sensor_msgs::Imu imu;
+sensor_msgs::Range range_1;
+sensor_msgs::Range range_2;
+sensor_msgs::Range range_3;
+sensor_msgs::Range range_4;
 corgi_msgs::ImpedanceCmdStamped imp_cmd;
 corgi_msgs::ForceStateStamped force_state;
 corgi_msgs::SimDataStamped sim_data;
@@ -144,8 +149,9 @@ void trigger_cb(const corgi_msgs::TriggerStamped msg){
                         << "v_9" << "," << "i_9" << ","
                         << "v_10" << "," << "i_10" << ","
                         << "v_11" << "," << "i_11" << ","
-                        
-                        << "sim_dst_lf" << "," << "sim_dst_lh" << "," << "sim_dst_rf" << "," << "sim_dst_rh"
+
+                        << "sim_dst_lf" << "," << "sim_dst_lh" << "," << "sim_dst_rf" << "," << "sim_dst_rh" << ","
+                        << "dst_lf" << "," << "dst_rf" << "," << "dst_rr" << "," << "dst_lh"
                         << "\n";
 
             ROS_INFO("Recording data to %s\n", output_file_name.c_str());
@@ -205,6 +211,22 @@ void odom_vel_cb(const geometry_msgs::Vector3::ConstPtr &msg){
 
 void odom_z_cb(const std_msgs::Float64::ConstPtr &msg){
     odom_z = msg->data;
+}
+
+void range_1_cb(const sensor_msgs::Range::ConstPtr &msg){
+    range_1 = *msg;
+}
+
+void range_2_cb(const sensor_msgs::Range::ConstPtr &msg){
+    range_2 = *msg;
+}
+
+void range_3_cb(const sensor_msgs::Range::ConstPtr &msg){
+    range_3 = *msg;
+}
+
+void range_4_cb(const sensor_msgs::Range::ConstPtr &msg){
+    range_4 = *msg;
 }
 
 void write_data() {
@@ -281,6 +303,7 @@ void write_data() {
                 << power_state.v_11 << "," << power_state.i_11 << ","
                 
                 << sim_data.dst_lf << "," << sim_data.dst_lh << "," << sim_data.dst_rf << "," << sim_data.dst_rh << ","
+                << range_1.range << "," << range_2.range << "," << range_3.range << "," << range_4.range
                 << "\n";
                 
     output_file.flush();
@@ -305,6 +328,10 @@ int main(int argc, char **argv) {
     ros::Subscriber odom_pos_sub = nh.subscribe<geometry_msgs::Vector3>("odometry/position", 1000, odom_pos_cb);
     ros::Subscriber odom_vel_sub = nh.subscribe<geometry_msgs::Vector3>("odometry/velocity", 1000, odom_vel_cb);
     ros::Subscriber odom_z_sub = nh.subscribe<std_msgs::Float64>("odometry/z_position_hip", 1000, odom_z_cb);
+    ros::Subscriber range_sub_1 = nh.subscribe<sensor_msgs::Range>("range_1", 1000, range_1_cb);
+    ros::Subscriber range_sub_2 = nh.subscribe<sensor_msgs::Range>("range_2", 1000, range_2_cb);
+    ros::Subscriber range_sub_3 = nh.subscribe<sensor_msgs::Range>("range_3", 1000, range_3_cb);
+    ros::Subscriber range_sub_4 = nh.subscribe<sensor_msgs::Range>("range_4", 1000, range_4_cb);
     ros::Rate rate(1000);
 
     signal(SIGINT, signal_handler);
