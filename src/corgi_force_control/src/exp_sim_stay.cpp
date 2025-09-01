@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
         &motor_state.module_d
     };
 
-    int exp_case = 2;  // G=0, L=1, U=2
+    int exp_case = 0;  // G=0, L=1, U=2
 
     double mg = -19.5*9.81;
     double F_init = mg/4.0;

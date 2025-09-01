@@ -151,7 +151,7 @@ void trigger_cb(const corgi_msgs::TriggerStamped msg){
                         << "v_11" << "," << "i_11" << ","
 
                         << "sim_dst_lf" << "," << "sim_dst_lh" << "," << "sim_dst_rf" << "," << "sim_dst_rh" << ","
-                        << "dst_lf" << "," << "dst_rf" << "," << "dst_rr" << "," << "dst_lh"
+                        << "dst_lf" << "," << "dst_rf" << "," << "dst_rr" << "," << "dst_lr"
                         << "\n";
 
             ROS_INFO("Recording data to %s\n", output_file_name.c_str());
