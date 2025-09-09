@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
     command_pitch_CoM << "Time," << "Trigger," << "pitch," << "CoM_x," << "CoM_z," << "\n";
 
     /* Setting variable */
-    double D=0.27, H=0.03;
+    double D=0.27, H=0.125;
     int stair_num = 3;
     enum STATES {INIT, TRANSFORM, WAIT, WALK, STAIR, UPPER_WALK, END};
     const std::array<double, 2> CoM_bias = {0.0, 0.0};
